@@ -1,0 +1,1 @@
+# pagopa-accounting-reconciliation-bdi-ingestion

@@ -1,0 +1,17 @@
+services:
+
+  pagopa-bdi-ingestion:
+    container_name: pagopa-bdi-ingestion
+    build:
+      dockerfile: Dockerfile
+      context: .
+    env_file:
+      - ./.env
+    ports:
+      - "8400:8080"
+    networks:
+      - pagopa-bdi-ingestion-net
+
+networks:
+  pagopa-bdi-ingestion-net:
+    driver: bridge

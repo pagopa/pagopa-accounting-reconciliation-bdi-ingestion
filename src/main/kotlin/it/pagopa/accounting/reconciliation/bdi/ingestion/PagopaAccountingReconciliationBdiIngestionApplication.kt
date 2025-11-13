@@ -9,5 +9,5 @@ import org.springframework.scheduling.annotation.EnableScheduling
 class PagopaAccountingReconciliationBdiIngestionApplication
 
 fun main(args: Array<String>) {
-	runApplication<PagopaAccountingReconciliationBdiIngestionApplication>(*args)
+    runApplication<PagopaAccountingReconciliationBdiIngestionApplication>(*args)
 }

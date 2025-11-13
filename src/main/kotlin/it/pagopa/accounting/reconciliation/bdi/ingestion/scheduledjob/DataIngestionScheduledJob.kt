@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service
 class DataIngestionScheduledJob {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @Scheduled(cron ="\${data-ingestion-job.execution.cron}")
+    @Scheduled(cron = "\${data-ingestion-job.execution.cron}")
     fun dataIngestion() {
         logger.info("RUN dataIngestion()")
     }

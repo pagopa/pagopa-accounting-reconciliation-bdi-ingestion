@@ -78,6 +78,8 @@ microservice-chart:
     OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
     DATA_INGESTION_JOB_EXECUTION_CRON: "*/30 * * * * *"
+  envSecret:
+    OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
   keyvault:
     name: "pagopa-u-qi-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"

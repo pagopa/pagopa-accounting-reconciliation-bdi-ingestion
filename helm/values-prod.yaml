@@ -78,6 +78,9 @@ microservice-chart:
     OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
     DATA_INGESTION_JOB_EXECUTION_CRON: "*/30 * * * * *"
+  keyvault:
+    name: "pagopa-p-qi-kv"
+    tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"
   nodeSelector: {}
   tolerations: []
   affinity:

@@ -77,7 +77,7 @@ microservice-chart:
     OTEL_METRICS_EXPORTER: otlp
     OTEL_LOGS_EXPORTER: otlp
     OTEL_TRACES_SAMPLER: "always_on"
-    DATA_INGESTION_JOB_EXECUTION_CRON: "*/30 * * * * *"
+    DATA_INGESTION_JOB_EXECUTION_CRON: "* * * */1 * *"
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
   keyvault:

@@ -1,0 +1,115 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: Banca d'Italia API
+  description: API for downloading accounting files from BDI (Banca d'Italia). Specification created based on documentation provided by BDI
+servers:
+  - url: https://certscambioflussi.bancaditalia.it/a2a/download/tesoreria
+    description: UAT environment
+  - url: https://scambioflussi.bancaditalia.it/a2a/download/tesoreria
+    description: PROD environment
+tags:
+  - name: accounting
+    description: Accounting APIs
+paths:
+  /opi-rend-out:
+    get:
+      tags:
+        - accounting
+      summary: Retrieve available files list
+      operationId: listAccountingFiles
+      security:
+        - mTLS_Auth: []
+      responses:
+        '200':
+          description: List of accounting zip files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FileMetadata'
+                required:
+                  - files
+        '401':
+          description: Unauthorized. Error in authentication phase.
+        '403':
+          description: Forbidden. Error in authorization phase.
+  /opi-rend-out/{fileName}:
+    get:
+      tags:
+        - accounting
+      summary: Download specified file
+      operationId: getAccountingFile
+      security:
+        - mTLS_Auth: []
+      parameters:
+        - name: fileName
+          in: path
+          required: true
+          description: The name of the file to download.
+          schema:
+            type: string
+            examples:
+              - "TS-07917-OPI-REND-ANALITICO.zip.p7m"
+      responses:
+        '200':
+          description: The requested file content
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        '401':
+          description: Unauthorized. Error in authentication phase.
+        '403':
+          description: Forbidden. Error in authorization phase.
+        '404':
+          description: File not found.
+
+components:
+  schemas:
+    FileMetadata:
+      type: object
+      description: Object containing metadata about a file or directory.
+      required:
+        - fileName
+        - isDirectory
+        - isRegularFile
+        - size
+        - lastModifiedTime
+      properties:
+        fileName:
+          type: string
+          description: The full name of the file, including its extension.
+          examples:
+            - "TS-07917-OPI-REND-ANALITICO-BE-20250922-1-1-20250922200720.zip.p7m"
+        isDirectory:
+          type: boolean
+          description: Indicates whether the entry is a directory.
+          examples:
+            - false
+        isRegularFile:
+          type: boolean
+          description: Indicates whether the entry is a file.
+          examples:
+            - true
+        size:
+          type: integer
+          format: int64
+          minimum: 0
+          description: The size of the file in bytes (empty in case of a directory).
+          examples:
+            - 3091
+        lastModifiedTime:
+          type: integer
+          format: int64
+          description: The last modification timestamp in Unix time format.
+          examples:
+            - 1758559546857
+  securitySchemes:
+    mTLS_Auth:
+      type: mutualTLS

@@ -12,6 +12,16 @@ services:
     networks:
       - pagopa-bdi-ingestion-net
 
+  bdi-service-mock:
+    container_name: bdi-service-mock
+    build:
+      context: .
+      dockerfile: docker/bdi-mock/Dockerfile.bdi-mock
+    ports:
+      - "8091:3000"
+    networks:
+      - pagopa-bdi-ingestion-net
+
 networks:
   pagopa-bdi-ingestion-net:
     driver: bridge

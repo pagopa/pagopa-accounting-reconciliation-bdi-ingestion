@@ -13,7 +13,7 @@ server.use(jsonServer.rewriter(routes));
 
 server.get('/a2a/download/tesoreria/opi-rend-out/*', (req, res) => {
 
-  const fixedFilePath = path.join(__dirname, '.', './test.zip.pm7');
+  const fixedFilePath = path.join(__dirname, '.', './test.zip.p7m');
 
   console.log(`Request: ${req.params[0]}`);
 

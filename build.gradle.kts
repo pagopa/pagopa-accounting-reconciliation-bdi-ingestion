@@ -81,10 +81,11 @@ tasks.withType<Test> { useJUnitPlatform() }
 tasks.named<Jar>("jar") { enabled = false }
 
 tasks.register("applySemanticVersionPlugin") {
-  group = "semantic-versioning"
-  description = "Semantic versioning plugin"
-  dependsOn("prepareKotlinBuildScriptModel")
-  apply(plugin = "com.dipien.semantic-version")
+    group = "semantic-versioning"
+    description = "Semantic versioning plugin"
+    dependsOn("prepareKotlinBuildScriptModel")
+}.apply {
+    apply(plugin = "com.dipien.semantic-version")
 }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {

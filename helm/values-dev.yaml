@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-accounting-reconciliation-bdi-ingestion"
   image:
     repository: pagopadcommonacr.azurecr.io/pagopaaccountingreconciliationbdiingestion
-    tag: "latest"
+    tag: "0.0.2"
     pullPolicy: Always
   livenessProbe:
     httpGet:

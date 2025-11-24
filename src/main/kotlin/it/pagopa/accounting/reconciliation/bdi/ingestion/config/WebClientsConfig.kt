@@ -23,7 +23,7 @@ class WebClientsConfig {
         @Value("\${bdi.server.readTimeoutMillis}") readTimeoutMillis: Int,
         @Value("\${bdi.server.connectionTimeoutMillis}") connectionTimeoutMillis: Int,
     ): WebClient {
-        //TODO: add certificate configuration
+        // TODO: add certificate configuration
 
         val httpClient =
             HttpClient.create()

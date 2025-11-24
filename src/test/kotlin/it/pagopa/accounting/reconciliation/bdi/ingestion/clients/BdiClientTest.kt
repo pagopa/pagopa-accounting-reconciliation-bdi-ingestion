@@ -2,9 +2,10 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.clients
 
 import it.pagopa.generated.bdi.api.AccountingApi
 import it.pagopa.generated.bdi.model.ListAccountingFiles200ResponseDto
+import java.io.File
+import java.nio.charset.StandardCharsets
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.given
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -14,8 +15,6 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.io.File
-import java.nio.charset.StandardCharsets
 
 @TestPropertySource(locations = ["classpath:application.test.properties"])
 class BdiClientTest {
@@ -27,25 +26,31 @@ class BdiClientTest {
     fun `getAvailableAccountingFiles returns a Mono emitting a ListAccountingFiles200ResponseDto`() {
         val listAccountingFiles200ResponseDto = ListAccountingFiles200ResponseDto()
 
-        given(bdiAccountingApi.listAccountingFiles()).willReturn(Mono.just(listAccountingFiles200ResponseDto))
+        given(bdiAccountingApi.listAccountingFiles())
+            .willReturn(Mono.just(listAccountingFiles200ResponseDto))
 
-        StepVerifier.create(bdiClient.getAvailableAccountingFiles()).expectNext(listAccountingFiles200ResponseDto).verifyComplete()
+        StepVerifier.create(bdiClient.getAvailableAccountingFiles())
+            .expectNext(listAccountingFiles200ResponseDto)
+            .verifyComplete()
         verify(bdiAccountingApi, times(1)).listAccountingFiles()
     }
 
     @Test
     fun `getAvailableAccountingFiles propagates exception on API error`() {
-        val ex = WebClientResponseException(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            "Internal Server Error",
-            HttpHeaders.EMPTY,
-            null,
-            StandardCharsets.UTF_8
-        )
+        val ex =
+            WebClientResponseException(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                HttpHeaders.EMPTY,
+                null,
+                StandardCharsets.UTF_8,
+            )
 
-        given(bdiAccountingApi.listAccountingFiles()).willReturn(Mono.error(ex));
+        given(bdiAccountingApi.listAccountingFiles()).willReturn(Mono.error(ex))
 
-        StepVerifier.create(bdiClient.getAvailableAccountingFiles()).expectError(WebClientResponseException::class.java).verify()
+        StepVerifier.create(bdiClient.getAvailableAccountingFiles())
+            .expectError(WebClientResponseException::class.java)
+            .verify()
         verify(bdiAccountingApi, times(1)).listAccountingFiles()
     }
 
@@ -56,24 +61,29 @@ class BdiClientTest {
         given(mockFile.name).willReturn("mock-file.zip")
         given(bdiAccountingApi.getAccountingFile(mockFile.name)).willReturn(Mono.just(mockFile))
 
-        StepVerifier.create(bdiClient.getAccountingFile(mockFile.name)).expectNext(mockFile).verifyComplete()
+        StepVerifier.create(bdiClient.getAccountingFile(mockFile.name))
+            .expectNext(mockFile)
+            .verifyComplete()
         verify(bdiAccountingApi, times(1)).getAccountingFile(mockFile.name)
     }
 
     @Test
     fun `getAccountingFile propagates exception on API error`() {
-        val ex = WebClientResponseException(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            "Internal Server Error",
-            HttpHeaders.EMPTY,
-            null,
-            StandardCharsets.UTF_8
-        )
+        val ex =
+            WebClientResponseException(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Internal Server Error",
+                HttpHeaders.EMPTY,
+                null,
+                StandardCharsets.UTF_8,
+            )
         val fileName = "mock-file.zip"
 
-        given(bdiAccountingApi.getAccountingFile(fileName)).willReturn(Mono.error(ex));
+        given(bdiAccountingApi.getAccountingFile(fileName)).willReturn(Mono.error(ex))
 
-        StepVerifier.create(bdiClient.getAccountingFile(fileName)).expectError(WebClientResponseException::class.java).verify()
+        StepVerifier.create(bdiClient.getAccountingFile(fileName))
+            .expectError(WebClientResponseException::class.java)
+            .verify()
         verify(bdiAccountingApi, times(1)).getAccountingFile(fileName)
     }
 }

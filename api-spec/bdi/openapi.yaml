@@ -18,8 +18,8 @@ paths:
         - accounting
       summary: Retrieve available files list
       operationId: listAccountingFiles
-      security:
-        - mTLS_Auth: []
+#      security:
+#        - mTLS_Auth: []
       responses:
         '200':
           description: List of accounting zip files
@@ -44,8 +44,8 @@ paths:
         - accounting
       summary: Download specified file
       operationId: getAccountingFile
-      security:
-        - mTLS_Auth: []
+#      security:
+#        - mTLS_Auth: []
       parameters:
         - name: fileName
           in: path
@@ -110,6 +110,6 @@ components:
           description: The last modification timestamp in Unix time format.
           examples:
             - 1758559546857
-  securitySchemes:
-    mTLS_Auth:
-      type: mutualTLS
+#  securitySchemes:
+#    mTLS_Auth:
+#      type: mutualTLS

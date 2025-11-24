@@ -1,7 +1,7 @@
 apiVersion: v2
 type: application
-version: 0.2.0
-appVersion: 0.2.0
+version: 0.2.1
+appVersion: 0.2.1
 name: pagopa-accounting-reconciliation-bdi-ingestion
 description: Microservice designed to ingest BDI data for the accounting reconciliation project.
 dependencies:

@@ -1,0 +1,16 @@
+{
+  "filesList" : {
+    "files" :
+    [
+      {
+        "fileName" : "test.zip.p7m",
+        "isDirectory" : false,
+        "isRegularFile" : true,
+        "size" : 2620740,
+        "lastModifiedTime" : 1762456781293
+      }
+    ]
+  }
+
+
+}

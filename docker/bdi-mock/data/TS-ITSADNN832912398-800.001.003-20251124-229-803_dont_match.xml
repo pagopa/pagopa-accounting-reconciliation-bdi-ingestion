@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OPI_REND_ANALITICO xmlns="http://tesoreria.bancaditalia.it/rendicontazione/" xmlns:ns2="http://www.w3.org/2000/09/xmldsig#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://tesoreria.bancaditalia.it/rendicontazione/ OPI-REND-ANALITICO.xsd">
+    <movimento>
+        <identificativoConto>TESTID</identificativoConto>
+        <chiaveDisposizione>
+            <tipologiaDisposizioneOpi>800.001.003</tipologiaDisposizioneOpi>
+            <ordinante>01000</ordinante>
+            <dataDisposizione>2025-11-20</dataDisposizione>
+            <identificativoDisposizione>TEST_IDENTIFICATIVO_DISPOSIZIONE</identificativoDisposizione>
+        </chiaveDisposizione>
+        <idMovimento>111111111</idMovimento>
+        <end2endID>NOT_MATCH</end2endID>
+        <causale>TEST/NOT_MATCH</causale>
+        <descrizione>TEST_DESCRIZIONE</descrizione>
+        <tipoMovimento>COMPLETO</tipoMovimento>
+        <divisa>EUR</divisa>
+        <importo>150</importo>
+        <dataContabile>2025-11-20</dataContabile>
+        <dataRiferimento>2025-11-20</dataRiferimento>
+        <descrizioneOrdinante>TEST DESCRIZIONE</descrizioneOrdinante>
+        <dettaglioMovimento>
+            <entrata>
+                <indicatoreFruttiferoInfruttifero>TEST</indicatoreFruttiferoInfruttifero>
+                <contoAddebitoBonifico>TEST_CONTO_ADDEBITO</contoAddebitoBonifico>
+                <bancaOrdinante>TEST_BANCA_ORDINANTE</bancaOrdinante>
+                <origineIncasso>800.001.003</origineIncasso>
+                <bonifico>
+                    <trn>AAAAAAA111111111</trn>
+                </bonifico>
+                <versante>
+                    <descrizione>TEST DESCRIZIONE VERSAMENTO</descrizione>
+                </versante>
+            </entrata>
+        </dettaglioMovimento>
+    </movimento>
+</OPI_REND_ANALITICO>

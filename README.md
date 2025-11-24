@@ -73,6 +73,11 @@ To run the **Junit** tests:
 $ ./gradlew test
 ```
 
+#### Mocks of external services
+For all the information regarding the used mocks go under the _./docker_ directory.
+
+For the generation of the testing data used for the BDI mock, see the README file under _./docker/bdi_mock/data/_.
+
 ### Dependency management 🔧
 
 To support reproducible build this project has the following gradle feature enabled:

@@ -12,7 +12,7 @@ plugins {
 
 group = "it.pagopa.accounting.reconciliation"
 
-version = "0.0.1-SNAPSHOT"
+version = "0.0.2-SNAPSHOT"
 
 description = "pagopa-accounting-reconciliation-bdi-ingestion"
 
@@ -80,12 +80,13 @@ tasks.withType<Test> { useJUnitPlatform() }
 
 tasks.named<Jar>("jar") { enabled = false }
 
-tasks.register("applySemanticVersionPlugin") {
-  group = "semantic-versioning"
-  description = "Semantic versioning plugin"
-  dependsOn("prepareKotlinBuildScriptModel")
-  apply(plugin = "com.dipien.semantic-version")
-}
+tasks
+  .register("applySemanticVersionPlugin") {
+    group = "semantic-versioning"
+    description = "Semantic versioning plugin"
+    dependsOn("prepareKotlinBuildScriptModel")
+  }
+  .apply { apply(plugin = "com.dipien.semantic-version") }
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
   kotlin {

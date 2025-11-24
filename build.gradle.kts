@@ -12,7 +12,7 @@ plugins {
 
 group = "it.pagopa.accounting.reconciliation"
 
-version = "0.0.2-SNAPSHOT"
+version = "0.1.0-SNAPSHOT"
 
 description = "pagopa-accounting-reconciliation-bdi-ingestion"
 

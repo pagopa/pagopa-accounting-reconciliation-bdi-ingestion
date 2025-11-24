@@ -24,7 +24,7 @@ The microservice needs a valid `.env` file in order to be run.
 If you want to start the application without too much hassle, you can just copy `.env.local.example` to get a good default configuration using the following command.
 
 ```shell
-$ cp .env.local.example .env
+cp .env.local.example .env
 ```
 
 
@@ -32,18 +32,21 @@ $ cp .env.local.example .env
 If you want to customize the application environment, reference this table:
 
 
-| Variable name                     | Description                                  | type   | default |
-|-----------------------------------|----------------------------------------------|--------|---------|
-| ROOT_LOGGING_LEVEL                | Application root logger level                | string | INFO    |
-| APP_LOGGING_LEVEL                 | it.pagopa logger level                       | string | INFO    |
-| WEB_LOGGING_LEVEL                 | Web logger level                             | string | INFO    |
-| DATA_INGESTION_JOB_EXECUTION_CRON | Data ingestion job execution cron expression | string |         |
+| Variable name                        | Description                                           | type    | default |
+|--------------------------------------|-------------------------------------------------------|---------|---------|
+| ROOT_LOGGING_LEVEL                   | Application root logger level                         | string  | INFO    |
+| APP_LOGGING_LEVEL                    | it.pagopa logger level                                | string  | INFO    |
+| WEB_LOGGING_LEVEL                    | Web logger level                                      | string  | INFO    |
+| BDI_SERVER_URI                       | BDI server uri                                        | string  |         |
+| BDI_SERVER_READ_TIMEOUT_MILLIS       | Read timeout in milliseconds for the bdi server       | integer |         |
+| BDI_SERVER_CONNECTION_TIMEOUT_MILLIS | Connection timeout in milliseconds for the bdi server | integer |         |
+| DATA_INGESTION_JOB_EXECUTION_CRON    | Data ingestion job execution cron expression          | string  |         |
 
 
 ### Run docker container
 
 ```shell
-$ docker compose up --build
+docker compose up --build
 ```
 
 ---
@@ -58,10 +61,16 @@ $ docker compose up --build
 
 ### Run the project
 
+Before locally running the application you need to export the environment variables contained in your `.env` file using the following command:
 ```shell
-$ export $(grep -v '^#' .env | xargs)
-$ ./gradlew bootRun
+set -a; source .env; set +a
 ```
+
+To run the application use:
+```shell
+./gradlew bootRun
+```
+
 
 ### Testing 🧪
 
@@ -70,7 +79,7 @@ $ ./gradlew bootRun
 To run the **Junit** tests:
 
 ```shell
-$ ./gradlew test
+./gradlew test
 ```
 
 #### Mocks of external services

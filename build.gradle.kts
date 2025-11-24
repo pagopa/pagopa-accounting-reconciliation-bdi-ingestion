@@ -1,3 +1,7 @@
+import org.gradle.kotlin.dsl.withType
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
   kotlin("jvm") version "2.1.0"
   kotlin("plugin.spring") version "2.1.0"
@@ -6,6 +10,7 @@ plugins {
   id("com.diffplug.spotless") version "8.0.0"
   id("org.sonarqube") version "7.0.1.6134"
   id("com.dipien.semantic-version") version "2.0.0" apply false
+  id("org.openapi.generator") version "7.17.0"
   jacoco
   application
 }
@@ -16,6 +21,10 @@ version = "0.1.0-SNAPSHOT"
 
 description = "pagopa-accounting-reconciliation-bdi-ingestion"
 
+sourceSets {
+  main { java.srcDirs("src/main/java", layout.buildDirectory.dir("generated/src/main/java")) }
+}
+
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 
 repositories { mavenCentral() }
@@ -24,6 +33,7 @@ object Dependencies {
   const val ecsLoggingVersion = "1.5.0"
   const val openTelemetryVersion = "1.37.0"
   const val mockitoVersion = "6.1.0"
+  const val JsonNullableJacksonVersion = "0.2.8"
 }
 
 dependencyLocking { lockAllConfigurations() }
@@ -45,6 +55,9 @@ dependencies {
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("co.elastic.logging:logback-ecs-encoder:${Dependencies.ecsLoggingVersion}")
   implementation("io.opentelemetry:opentelemetry-api:${Dependencies.openTelemetryVersion}")
+  implementation(
+    "org.openapitools:jackson-databind-nullable:${Dependencies.JsonNullableJacksonVersion}"
+  )
 
   // tests
   testImplementation("org.mockito.kotlin:mockito-kotlin:${Dependencies.mockitoVersion}")
@@ -108,6 +121,41 @@ configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     trimTrailingWhitespace()
     endWithNewline()
   }
+}
+
+tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("bdi") {
+  description = "Generates the BDI classes for this project."
+  group = "openapi-generation"
+  generatorName.set("java")
+  inputSpec.set("$rootDir/api-spec/bdi/openapi.yaml")
+  outputDir.set(layout.buildDirectory.get().dir("generated").asFile.toString())
+  apiPackage.set("it.pagopa.generated.bdi.api")
+  modelPackage.set("it.pagopa.generated.bdi.model")
+  generateApiDocumentation.set(false)
+  generateApiTests.set(false)
+  generateModelTests.set(false)
+  library.set("webclient")
+  modelNameSuffix.set("Dto")
+  configOptions.set(
+    mapOf(
+      "swaggerAnnotations" to "false",
+      "openApiNullable" to "true",
+      "interfaceOnly" to "false",
+      "hideGenerationTimestamp" to "true",
+      "skipDefaultInterface" to "true",
+      "useSwaggerUI" to "false",
+      "reactive" to "true",
+      "useSpringBoot3" to "true",
+      "oas3" to "true",
+      "generateSupportingFiles" to "false",
+      "useJakartaEe" to "true",
+    )
+  )
+}
+
+tasks.withType<KotlinCompile> {
+  dependsOn("bdi")
+  compilerOptions { jvmTarget.set(JvmTarget.JVM_21) }
 }
 
 tasks.test {

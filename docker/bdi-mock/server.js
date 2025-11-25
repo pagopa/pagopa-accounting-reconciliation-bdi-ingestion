@@ -1,5 +1,7 @@
 const jsonServer = require('json-server');
 const path = require('path');
+const fs = require('fs');
+const https = require('https');
 const server = jsonServer.create();
 const router = jsonServer.router('./bdi.json');
 const middlewares = jsonServer.defaults();
@@ -28,6 +30,25 @@ server.get('/a2a/download/tesoreria/opi-rend-out/*', (req, res) => {
 
 server.use(router);
 
-server.listen(3000, () => {
-  console.log('bdi-mock server listening on port 3000');
+const options = {
+  // private test key
+  key: fs.readFileSync(path.join(__dirname, './bdi-mock.key')),
+
+  // public test cert
+  cert: fs.readFileSync(path.join(__dirname, './bdi-mock.pem')),
+
+  // Add the public cert of the client in the array of trusted ca
+  // This will be the only trusted certificate from the mock
+  ca: [
+    fs.readFileSync(path.join(__dirname, './client.pem'))
+  ],
+
+  requestCert: true,
+  rejectUnauthorized: true
+};
+
+const httpsServer = https.createServer(options, server);
+
+httpsServer.listen(3000, () => {
+  console.log('Secure JSON Server (mTLS) running on port 3000');
 });

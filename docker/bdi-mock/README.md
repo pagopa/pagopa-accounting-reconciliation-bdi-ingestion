@@ -18,8 +18,10 @@ openssl req -nodes -new -x509 -keyout bdi-mock.key -out bdi-mock.pem -days 365 -
 2: Generate the certificate used by the client under the __cert_client__ directory:
 ```shell
 cd cert_client
-openssl req -nodes -new -x509 -keyout client.key -out client.pem -days 365 -subj "/CN=localhost"
+openssl req -nodes -new -x509 -keyout client.pem -out client_complete.pem -days 365 -subj "/CN=localhost"
 ```
+In this case will be only a single file with private and public key
+
 The __server.json__ is using to the default certificate, you can change the file name to the certificate in the
 __option__ object if necessary :
 

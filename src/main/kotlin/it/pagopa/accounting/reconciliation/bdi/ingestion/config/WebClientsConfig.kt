@@ -32,7 +32,9 @@ class WebClientsConfig {
 
         // Configure the SSLcontext of Netty using the KeyManager
         val sslContext =
-            SslContextBuilder.forClient().keyManager(sslBundle.managers.keyManagerFactory).build()
+            SslContextBuilder.forClient()
+                .keyManager(sslBundle.managers.keyManagerFactory)
+                .build()
 
         val httpClient =
             HttpClient.create()

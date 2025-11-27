@@ -66,6 +66,12 @@ microservice-chart:
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 0
+  providedVolumeMount:
+    create: true
+    folders:
+      - secretname: bdi-accounting-reconciliation-platform-pagopa-it
+        filename: client-cert.pem
+        mountpath: /mnt/secrets/certs
   envConfig:
     ROOT_LOGGING_LEVEL: "info"
     OTEL_SERVICE_NAME: "pagopa-accounting-reconciliation-bdi-ingestion"
@@ -81,6 +87,7 @@ microservice-chart:
     BDI_SERVER_READ_TIMEOUT_MILLIS: "10000"
     BDI_SERVER_CONNECTION_TIMEOUT_MILLIS: "10000"
     DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
+    BDI_CERTIFICATE_FILE_NAME: client-cert.pem
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
   keyvault:

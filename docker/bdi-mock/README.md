@@ -53,5 +53,5 @@ docker compose up bdi-service-mock
 Using curl:
 ```shell
 curl --insecure --cert client.pem --key client.key https://localhost:8091/opi-rend-out
-curl --insecure --cert client.pem --key client.key https://localhost:8091/opi-rend-out/testFile
+curl --insecure --cert client.pem --key client.key https://localhost:8091/opi-rend-out/test.zip.p7m
 ```

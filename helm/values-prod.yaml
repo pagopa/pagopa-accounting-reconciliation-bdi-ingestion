@@ -80,7 +80,7 @@ microservice-chart:
     BDI_SERVER_URI: "https://scambioflussi.bancaditalia.it/a2a/download/tesoreria"
     BDI_SERVER_READ_TIMEOUT_MILLIS: "10000"
     BDI_SERVER_CONNECTION_TIMEOUT_MILLIS: "10000"
-    DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
+    ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
   keyvault:

@@ -14,7 +14,7 @@
         <descrizione>TEST_DESCRIZIONE</descrizione>
         <tipoMovimento>COMPLETO</tipoMovimento>
         <divisa>EUR</divisa>
-        <importo>150</importo>
+        <importo>150.02</importo>
         <dataContabile>2025-11-20</dataContabile>
         <dataRiferimento>2025-11-20</dataRiferimento>
         <descrizioneOrdinante>TEST DESCRIZIONE</descrizioneOrdinante>

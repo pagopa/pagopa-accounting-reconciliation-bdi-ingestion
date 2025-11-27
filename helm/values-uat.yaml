@@ -83,7 +83,7 @@ microservice-chart:
     BDI_SERVER_READ_TIMEOUT_MILLIS: "10000"
     BDI_SERVER_CONNECTION_TIMEOUT_MILLIS: "10000"
     DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
-    BDI_CERTIFICATE_PATH: /mnt/secrets-store/client-cert.pem
+    BDI_CERTIFICATE_PATH: /mnt/secrets-store/bdi-accounting-reconciliation-platform-pagopa-it
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     BDI_CERTIFICATE: bdi-accounting-reconciliation-platform-pagopa-it

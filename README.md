@@ -41,7 +41,7 @@ If you want to customize the application environment, reference this table:
 | BDI_SERVER_READ_TIMEOUT_MILLIS       | Read timeout in milliseconds for the bdi server       | integer |         |
 | BDI_SERVER_CONNECTION_TIMEOUT_MILLIS | Connection timeout in milliseconds for the bdi server | integer |         |
 | DATA_INGESTION_JOB_EXECUTION_CRON    | Data ingestion job execution cron expression          | string  |         |
-| CERTIFICATE_FILE_NAME                | Name of the pem certificate                           | string  |         |
+| BDI_CERTIFICATE_FILE_NAME            | Name of the pem certificate                           | string  |         |
 
 
 ### Run docker container

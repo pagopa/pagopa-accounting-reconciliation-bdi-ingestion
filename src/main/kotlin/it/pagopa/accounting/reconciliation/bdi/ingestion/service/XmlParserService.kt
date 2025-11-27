@@ -23,10 +23,10 @@ class XmlParserService {
         }
 
     /**
-     * Parses an accounting XML InputStream and extract the needed data
+     * Parses an accounting XML [InputStream] and extract the needed data.
      *
-     * @param inputStream The accounting XML inputStream to parse
-     * @return A BdiAccountingData containing the data extracted from the file
+     * @param inputStream The source [InputStream] containing the accounting XML data.
+     * @return A [BdiAccountingData] containing the extracted values.
      */
     fun parseAccountingXmlFromStream(inputStream: InputStream): BdiAccountingData {
         val invoice = xmlMapper.readValue(inputStream, OpiRendAnalitico::class.java)

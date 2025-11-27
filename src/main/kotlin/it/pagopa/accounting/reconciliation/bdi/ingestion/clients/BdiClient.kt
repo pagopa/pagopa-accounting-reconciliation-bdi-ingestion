@@ -14,8 +14,8 @@ class BdiClient(private val bdiAccountingApi: AccountingApi) {
     /**
      * Calls the listAccountingFiles API
      *
-     * @return A Mono emitting a ListAccountingFiles200ResponseDto containing the list of files or
-     *   an error
+     * @return A [Mono] emitting a [ListAccountingFiles200ResponseDto] containing the list of files
+     *   or an error
      */
     fun getAvailableAccountingFiles(): Mono<ListAccountingFiles200ResponseDto> {
         return bdiAccountingApi.listAccountingFiles().doOnError {
@@ -27,7 +27,7 @@ class BdiClient(private val bdiAccountingApi: AccountingApi) {
      * Calls the getAccountingFile API with a file name as a filter
      *
      * @param fileName The name of the file to download
-     * @return A Mono emitting a Resource or an error
+     * @return A [Mono] emitting a [Resource] or an error
      */
     fun getAccountingFile(fileName: String): Mono<Resource> {
         return bdiAccountingApi.getAccountingFile(fileName).doOnError {

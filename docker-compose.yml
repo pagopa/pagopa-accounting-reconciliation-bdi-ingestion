@@ -9,7 +9,7 @@ services:
       - ./.env
     volumes:
       #import of the directory of the certs for the ssl connection to the mock
-      - ./docker/bdi-mock/cert_client:/mnt/secrets/certs:ro
+      - ./docker/bdi-mock/cert_client:/mnt/secrets-store/certs:ro
     ports:
       - "8090:8080"
     networks:

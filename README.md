@@ -32,16 +32,16 @@ cp .env.local.example .env
 If you want to customize the application environment, reference this table:
 
 
-| Variable name                        | Description                                           | type    | default |
-|--------------------------------------|-------------------------------------------------------|---------|---------|
-| ROOT_LOGGING_LEVEL                   | Application root logger level                         | string  | INFO    |
-| APP_LOGGING_LEVEL                    | it.pagopa logger level                                | string  | INFO    |
-| WEB_LOGGING_LEVEL                    | Web logger level                                      | string  | INFO    |
-| BDI_SERVER_URI                       | BDI server uri                                        | string  |         |
-| BDI_SERVER_READ_TIMEOUT_MILLIS       | Read timeout in milliseconds for the bdi server       | integer |         |
-| BDI_SERVER_CONNECTION_TIMEOUT_MILLIS | Connection timeout in milliseconds for the bdi server | integer |         |
-| DATA_INGESTION_JOB_EXECUTION_CRON    | Data ingestion job execution cron expression          | string  |         |
-| BDI_CERTIFICATE_FILE_NAME            | Name of the pem certificate                           | string  |         |
+| Variable name                        | Description                                            | type    | default |
+|--------------------------------------|--------------------------------------------------------|---------|---------|
+| ROOT_LOGGING_LEVEL                   | Application root logger level                          | string  | INFO    |
+| APP_LOGGING_LEVEL                    | it.pagopa logger level                                 | string  | INFO    |
+| WEB_LOGGING_LEVEL                    | Web logger level                                       | string  | INFO    |
+| BDI_SERVER_URI                       | BDI server uri                                         | string  |         |
+| BDI_SERVER_READ_TIMEOUT_MILLIS       | Read timeout in milliseconds for the bdi server        | integer |         |
+| BDI_SERVER_CONNECTION_TIMEOUT_MILLIS | Connection timeout in milliseconds for the bdi server  | integer |         |
+| DATA_INGESTION_JOB_EXECUTION_CRON    | Data ingestion job execution cron expression           | string  |         |
+| BDI_CERTIFICATE_PATH                 | Path to the pem certificate                            | string  |         |
 
 
 ### Run docker container

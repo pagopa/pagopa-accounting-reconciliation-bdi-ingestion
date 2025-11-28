@@ -34,6 +34,7 @@ object Dependencies {
   const val openTelemetryVersion = "1.37.0"
   const val mockitoVersion = "6.1.0"
   const val JsonNullableJacksonVersion = "0.2.8"
+  const val bouncyCastleVersion = "1.82"
 }
 
 dependencyLocking { lockAllConfigurations() }
@@ -49,15 +50,16 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("co.elastic.logging:logback-ecs-encoder:${Dependencies.ecsLoggingVersion}")
   implementation("io.opentelemetry:opentelemetry-api:${Dependencies.openTelemetryVersion}")
   implementation(
     "org.openapitools:jackson-databind-nullable:${Dependencies.JsonNullableJacksonVersion}"
   )
+  implementation("org.bouncycastle:bcpkix-jdk18on:${Dependencies.bouncyCastleVersion}")
 
   // tests
   testImplementation("org.mockito.kotlin:mockito-kotlin:${Dependencies.mockitoVersion}")
@@ -151,6 +153,8 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>("bdi
       "useJakartaEe" to "true",
     )
   )
+  typeMappings.set(mapOf("File" to "org.springframework.core.io.Resource"))
+  importMappings.set(mapOf("Resource" to "org.springframework.core.io.Resource"))
 }
 
 tasks.withType<KotlinCompile> {

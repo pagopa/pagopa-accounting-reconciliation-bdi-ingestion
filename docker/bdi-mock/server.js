@@ -14,13 +14,13 @@ server.use(middlewares);
 server.use(jsonServer.rewriter(routes));
 
 server.get('/opi-rend-out/*', (req, res) => {
+  const fileName = req.params[0]
+  console.log("Requested file: ", fileName);
 
-  const fixedFilePath = path.join(__dirname, '.', './test.zip.p7m');
+  const filePath = path.join(__dirname, '.', './' + fileName);
 
-  console.log(`Request: ${req.params[0]}`);
-
-  // Download always the same file
-  res.download(fixedFilePath, 'test.zip.p7m', (err) => {
+  // Download the requested file
+  res.download(filePath, fileName, (err) => {
     if (err) {
       console.error("Error during the download:", err);
       res.status(404).send("File not found");

@@ -70,6 +70,10 @@ microservice-chart:
     create: true
   envConfig:
     ROOT_LOGGING_LEVEL: "info"
+    APP_LOGGING_LEVEL: "info"
+    WEB_LOGGING_LEVEL: "info"
+    NETTY_TCP_SSL_PROVIDER_LOGGING_LEVEL: "debug"
+    NETTY_HANDLER_SSL_LOGGING_LEVEL: "debug"
     OTEL_SERVICE_NAME: "pagopa-accounting-reconciliation-bdi-ingestion"
     OTEL_SERVICE_ENVIRONMENT: "prod"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=prod"
@@ -82,9 +86,8 @@ microservice-chart:
     BDI_SERVER_URI: "https://scambioflussi.bancaditalia.it/a2a/download/tesoreria"
     BDI_SERVER_READ_TIMEOUT_MILLIS: "10000"
     BDI_SERVER_CONNECTION_TIMEOUT_MILLIS: "10000"
-    DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
+    ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
     BDI_CERTIFICATE_PATH: /mnt/secrets-store/bdi-accounting-reconciliation-platform-pagopa-it
-    JAVA_TOOL_OPTIONS: -Djavax.net.debug=ssl:handshake:verbose
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     BDI_CERTIFICATE: bdi-accounting-reconciliation-platform-pagopa-it

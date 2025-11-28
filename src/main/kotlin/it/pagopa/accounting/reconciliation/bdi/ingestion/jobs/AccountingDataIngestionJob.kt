@@ -2,11 +2,13 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.jobs
 
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
 import it.pagopa.accounting.reconciliation.bdi.ingestion.jobs.config.JobConfiguration
+import it.pagopa.accounting.reconciliation.bdi.ingestion.service.IngestionService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.ReactiveP7mZipService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.XmlParserService
 import it.pagopa.generated.bdi.model.FileMetadataDto
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -16,6 +18,7 @@ import reactor.core.publisher.Mono
 @Component
 class AccountingDataIngestionJob(
     private val bdiClient: BdiClient,
+    private val ingestionService: IngestionService,
     private val reactiveP7mZipService: ReactiveP7mZipService,
     private val xmlParserService: XmlParserService,
 ) : ScheduledJob<JobConfiguration, Long> {
@@ -33,6 +36,16 @@ class AccountingDataIngestionJob(
             .flatMapIterable { it.files }
             .filterWhen { shouldDownloadFile(it) }
             .doOnNext { logger.info("Downloading file: ${it.fileName}") }
+            .transform {
+                ingestionService.ingestDataStream(
+                    it.map { it.fileName }
+                ) // Create a DTO with only file name as parameter
+                it
+            }
+            .onErrorResume { e ->
+                logger.error("", e)
+                Flux.empty()
+            }
             .flatMap(
                 { fileMetadataDto ->
                     bdiClient

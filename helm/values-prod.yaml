@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-accounting-reconciliation-bdi-ingestion"
   image:
     repository: pagopapcommonacr.azurecr.io/pagopaaccountingreconciliationbdiingestion
-    tag: "0.4.0"
+    tag: "0.5.0"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -66,6 +66,8 @@ microservice-chart:
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 0
+  secretProviderClass:
+    create: true
   envConfig:
     ROOT_LOGGING_LEVEL: "info"
     OTEL_SERVICE_NAME: "pagopa-accounting-reconciliation-bdi-ingestion"
@@ -81,8 +83,11 @@ microservice-chart:
     BDI_SERVER_READ_TIMEOUT_MILLIS: "10000"
     BDI_SERVER_CONNECTION_TIMEOUT_MILLIS: "10000"
     ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
+    BDI_CERTIFICATE_PATH: /mnt/secrets-store/bdi-accounting-reconciliation-platform-pagopa-it
+    JAVA_TOOL_OPTIONS: -Djavax.net.debug=ssl:handshake:verbose
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
+    BDI_CERTIFICATE: bdi-accounting-reconciliation-platform-pagopa-it
   keyvault:
     name: "pagopa-p-qi-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"

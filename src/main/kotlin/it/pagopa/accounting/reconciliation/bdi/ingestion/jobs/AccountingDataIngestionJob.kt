@@ -33,44 +33,47 @@ class AccountingDataIngestionJob(
             .flatMapIterable { it.files }
             .filterWhen { shouldDownloadFile(it) }
             .doOnNext { logger.info("Downloading file: ${it.fileName}") }
-            .flatMap { fileMetadataDto ->
-                bdiClient
-                    .getAccountingFile(fileMetadataDto.fileName)
-                    .flatMapMany { resource ->
-                        // stream data pipeline: Stream -> Decrypt -> Unzip -> Parse -> Object
-                        reactiveP7mZipService.extractAndMap(
-                            p7mZipInputStream = resource.inputStream,
-                            entryNameFilter = { fileName ->
-                                fileName.endsWith(".xml", ignoreCase = true)
-                            },
-                            mapper = { stream ->
-                                xmlParserService.parseAccountingXmlFromStream(stream)
-                            },
-                        )
-                    }
-                    .doOnNext { bdiAccountingData ->
-                        logger.debug(
-                            "Processed: [end2endId={}, causale={}, importo={}, bancaOrdinante={}]",
-                            bdiAccountingData.end2endId,
-                            bdiAccountingData.causale,
-                            bdiAccountingData.importo,
-                            bdiAccountingData.bancaOrdinante,
-                        )
-                    }
-                    .onErrorResume { e ->
-                        if (e is IllegalArgumentException) {
-                            logger.warn(
-                                "Skipping empty or invalid P7M file: ${fileMetadataDto.fileName}"
-                            )
-                        } else {
-                            logger.error(
-                                "Unexpected error processing file: ${fileMetadataDto.fileName}",
-                                e,
+            .flatMap(
+                { fileMetadataDto ->
+                    bdiClient
+                        .getAccountingFile(fileMetadataDto.fileName)
+                        .flatMapMany { resource ->
+                            // stream data pipeline: Stream -> Decrypt -> Unzip -> Parse -> Object
+                            reactiveP7mZipService.extractAndMap(
+                                p7mZipInputStream = resource.inputStream,
+                                entryNameFilter = { fileName ->
+                                    fileName.endsWith(".xml", ignoreCase = true)
+                                },
+                                mapper = { stream ->
+                                    xmlParserService.parseAccountingXmlFromStream(stream)
+                                },
                             )
                         }
-                        Mono.empty()
-                    }
-            }
+                        .doOnNext { bdiAccountingData ->
+                            logger.debug(
+                                "Processed: [end2endId={}, causale={}, importo={}, bancaOrdinante={}]",
+                                bdiAccountingData.end2endId,
+                                bdiAccountingData.causale,
+                                bdiAccountingData.importo,
+                                bdiAccountingData.bancaOrdinante,
+                            )
+                        }
+                        .onErrorResume { e ->
+                            if (e is IllegalArgumentException) {
+                                logger.warn(
+                                    "Skipping empty or invalid P7M file: ${fileMetadataDto.fileName}"
+                                )
+                            } else {
+                                logger.error(
+                                    "Unexpected error processing file: ${fileMetadataDto.fileName}",
+                                    e,
+                                )
+                            }
+                            Mono.empty()
+                        }
+                },
+                5,
+            )
             .count()
     }
 

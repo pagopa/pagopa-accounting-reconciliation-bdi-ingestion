@@ -44,7 +44,6 @@ If you want to customize the application environment, reference this table:
 | BDI_CERTIFICATE_PATH                 | Path to the pem certificate                           | string  |                                         |
 | JAVA_TOOL_OPTIONS                    | JVM optional args                                     | string  | -Djavax.net.debug=ssl:handshake:verbose |
 
-JAVA_TOOL_OPTIONS
 ### Run docker container
 
 ```shell

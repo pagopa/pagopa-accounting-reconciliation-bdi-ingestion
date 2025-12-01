@@ -15,10 +15,7 @@ class KustoConfig {
 
     @Bean(name = ["reKustoClient"])
     fun reKustoClient(
-        @Value("\${azuredataexplorer.re.endpoint}") endpoint: String,
-        @Value("\${azuredataexplorer.re.clientId}") clientId: String,
-        @Value("\${azuredataexplorer.re.applicationKey}") applicationKey: String,
-        @Value("\${azuredataexplorer.re.applicationTenantId}") tenantId: String,
+        @Value("\${azuredataexplorer.re.endpoint}") endpoint: String
     ): QueuedIngestClient {
 
         logger.info("Initializing RE Kusto client")

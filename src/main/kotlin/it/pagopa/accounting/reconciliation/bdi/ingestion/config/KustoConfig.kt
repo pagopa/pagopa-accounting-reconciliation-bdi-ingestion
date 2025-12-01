@@ -1,6 +1,8 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.config
 
 import com.azure.identity.DefaultAzureCredentialBuilder
+import com.microsoft.azure.kusto.data.Client
+import com.microsoft.azure.kusto.data.ClientFactory
 import com.microsoft.azure.kusto.data.auth.ConnectionStringBuilder
 import com.microsoft.azure.kusto.ingest.IngestClientFactory
 import com.microsoft.azure.kusto.ingest.QueuedIngestClient
@@ -32,5 +34,17 @@ class KustoConfig {
 
         // 3. Create the Ingest Client (Queued Ingestion is recommended for high throughput)
         return IngestClientFactory.createClient(kcsb)
+    }
+
+    @Bean(name = ["reKustoQueryClient"])
+    fun reKustoQueryClient(@Value("\${azuredataexplorer.re.endpoint}") endpoint: String): Client {
+        logger.info("Initializing RE Kusto Query client for Startup Check")
+
+        val queryEndpoint = "https://$endpoint"
+
+        val credential = DefaultAzureCredentialBuilder().build()
+        val kcsb = ConnectionStringBuilder.createWithTokenCredential(queryEndpoint, credential)
+
+        return ClientFactory.createClient(kcsb)
     }
 }

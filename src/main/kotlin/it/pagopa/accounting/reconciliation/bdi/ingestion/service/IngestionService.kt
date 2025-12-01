@@ -57,7 +57,7 @@ class IngestionService(
                 // L'SDK gestisce l'upload verso Azure Storage Queue
                 val ingestionResult = ingestClient.ingestFromStream(sourceInfo, ingestionProperties)
 
-                analizzaRisultato(ingestionResult)
+                analiseResults(ingestionResult)
 
                 logger.info("IngestionResult: ${ingestionResult.ingestionStatusCollection}")
             }
@@ -67,7 +67,7 @@ class IngestionService(
             .then()
     }
 
-    fun analizzaRisultato(result: IngestionResult) {
+    fun analiseResults(result: IngestionResult) {
         // L'oggetto contiene una lista di stati (di solito uno per blob/file)
         val statuses: List<IngestionStatus> = result.ingestionStatusCollection
 

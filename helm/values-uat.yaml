@@ -91,6 +91,7 @@ microservice-chart:
     AZURE_DATA_EXPLORER_RE_DATABASE: re
     AZURE_DATA_EXPLORER_RE_DATABASE_TABLE: test_bdi
     AZURE_DATA_EXPLORER_RE_MAPPING_NAME: test_bdi
+    AZURE_DATA_EXPLORER_RE_ENDPOINT: pagopaudataexplorer.westeurope.kusto.windows.net
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     BDI_CERTIFICATE: bdi-accounting-reconciliation-platform-pagopa-it

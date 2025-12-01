@@ -40,7 +40,7 @@ class ReactiveP7mZipService {
     fun <T : Any> extractAndMap(
         p7mZipInputStream: InputStream,
         entryNameFilter: (String) -> Boolean,
-        mapper: (InputStream) -> T,
+        mapper: (String, InputStream) -> T,
     ): Flux<T> {
         return Flux.create<T> { sink ->
                 try {
@@ -72,7 +72,7 @@ class ReactiveP7mZipService {
         decryptedStream: InputStream,
         sink: FluxSink<T>,
         entryNameFilter: (String) -> Boolean,
-        mapper: (InputStream) -> T,
+        mapper: (String, InputStream) -> T,
     ) {
         BufferedInputStream(decryptedStream).use { bufferedCmsStream ->
             ZipInputStream(bufferedCmsStream).use { zipStream ->
@@ -82,7 +82,7 @@ class ReactiveP7mZipService {
                         try {
                             // protect the stream to avoid it to being closed by the mapper function
                             val protectedStream = StreamUtils.nonClosing(zipStream)
-                            val result = mapper(protectedStream)
+                            val result = mapper(entry.name, protectedStream)
                             sink.next(result)
                         } catch (e: Exception) {
                             logger.warn(

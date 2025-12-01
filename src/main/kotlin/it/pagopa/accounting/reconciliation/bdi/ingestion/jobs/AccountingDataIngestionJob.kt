@@ -1,6 +1,7 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.jobs
 
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccounting
 import it.pagopa.accounting.reconciliation.bdi.ingestion.jobs.config.JobConfiguration
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.IngestionService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.ReactiveP7mZipService
@@ -26,8 +27,6 @@ class AccountingDataIngestionJob(
 
     override fun id(): String = "bdi-accounting-data-ingestion"
 
-    // TODO: save bdiAccountingData content on Data Explorer
-    // TODO: save downloaded file name
     override fun process(configuration: JobConfiguration?): Mono<Long> {
         logger.info("Starting BDI accounting data ingestion job")
         return bdiClient
@@ -35,75 +34,55 @@ class AccountingDataIngestionJob(
             .onErrorResume { Mono.empty() }
             .flatMapIterable { it.files }
             .filterWhen { shouldDownloadFile(it) }
-            // 1. Collect valid files into a List in memory
-            .collectList()
-            .flatMap { fileList ->
-                if (fileList.isEmpty()) {
-                    return@flatMap Mono.empty()
-                }
-
-                // 2. Prepare the names
-                val fileNames = fileList.map { it.fileName }
-                logger.info("Ingesting names for ${fileList.size} files")
-
-                // 3. Call your service (Assuming it takes a List or Flux and returns a Mono)
-                ingestionService
-                    .ingestDataStream(Flux.fromIterable(fileNames))
-                    .doOnSuccess { logger.info("File names ingestion completed") }
-                    .onErrorResume { e ->
-                        // Decide: Do you want to stop everything if ingestion fails?
-                        // If yes: return Mono.error(e)
-                        // If no (continue downloading anyway):
-                        logger.error(
-                            "Error during file name data ingestion, proceeding with download.",
-                            e,
-                        )
-                        Mono.empty()
-                    }
-                    // 4. Once ingestion is done, pass the original list downstream
-                    .thenReturn(fileList)
-            }
-            // 5. Turn the List back into a Flux to process files one by one
-            .flatMapIterable { it }
             .doOnNext { logger.info("Downloading file: ${it.fileName}") }
             .flatMap(
                 { fileMetadataDto ->
-                    bdiClient
-                        .getAccountingFile(fileMetadataDto.fileName)
-                        .flatMapMany { resource ->
-                            // stream data pipeline: Stream -> Decrypt -> Unzip -> Parse -> Object
-                            reactiveP7mZipService.extractAndMap(
-                                p7mZipInputStream = resource.inputStream,
-                                entryNameFilter = { fileName ->
-                                    fileName.endsWith(".xml", ignoreCase = true)
-                                },
-                                mapper = { stream ->
-                                    xmlParserService.parseAccountingXmlFromStream(stream)
-                                },
-                            )
-                        }
-                        .doOnNext { bdiAccountingData ->
-                            logger.debug(
-                                "Processed: [end2endId={}, causale={}, importo={}, bancaOrdinante={}]",
-                                bdiAccountingData.end2endId,
-                                bdiAccountingData.causale,
-                                bdiAccountingData.importo,
-                                bdiAccountingData.bancaOrdinante,
-                            )
-                        }
-                        .onErrorResume { e ->
-                            if (e is IllegalArgumentException) {
-                                logger.warn(
-                                    "Skipping empty or invalid P7M file: ${fileMetadataDto.fileName}"
-                                )
-                            } else {
-                                logger.error(
-                                    "Unexpected error processing file: ${fileMetadataDto.fileName}",
-                                    e,
+                    val dataStream: Flux<BdiAccounting> =
+                        bdiClient
+                            .getAccountingFile(fileMetadataDto.fileName)
+                            .flatMapMany { resource ->
+                                reactiveP7mZipService.extractAndMap(
+                                    p7mZipInputStream = resource.inputStream,
+                                    entryNameFilter = { it.endsWith(".xml", ignoreCase = true) },
+                                    mapper = { xmlName, stream ->
+                                        val accountingData =
+                                            xmlParserService.parseAccountingXmlFromStream(stream)
+                                        BdiAccounting(
+                                            zipFileName = fileMetadataDto.fileName,
+                                            xmlFileName = xmlName,
+                                            end2endId = accountingData.end2endId,
+                                            causale = accountingData.causale,
+                                            importo = accountingData.importo,
+                                            bancaOrdinante = accountingData.bancaOrdinante,
+                                        )
+                                    },
                                 )
                             }
-                            Mono.empty()
+                            .doOnNext {
+                                logger.debug(
+                                    "Saving: Zip={}, Xml={}, end2endId={}, causale={}, importo={}, bancaOrdinante={}",
+                                    it.zipFileName,
+                                    it.xmlFileName,
+                                    it.end2endId,
+                                    it.causale,
+                                    it.importo,
+                                    it.bancaOrdinante,
+                                )
+                            }
+                    // Save data on Data Explorer
+                    ingestionService.ingestDataStream(dataStream).onErrorResume { e ->
+                        if (e is IllegalArgumentException) {
+                            logger.warn(
+                                "Skipping empty or invalid P7M file: ${fileMetadataDto.fileName}"
+                            )
+                        } else {
+                            logger.error(
+                                "Unexpected error processing file: ${fileMetadataDto.fileName}",
+                                e,
+                            )
                         }
+                        Mono.empty()
+                    }
                 },
                 5,
             )

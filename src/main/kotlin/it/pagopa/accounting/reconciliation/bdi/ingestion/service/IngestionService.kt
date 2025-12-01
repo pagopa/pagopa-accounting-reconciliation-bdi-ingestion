@@ -74,21 +74,21 @@ class IngestionService(
         for (status in statuses) {
             when (status.status) {
                 OperationStatus.Succeeded -> {
-                    println("✅ Ingestione completata per ID: ${status.ingestionSourceId}")
+                    logger.info("Ingestione completata per ID: ${status.ingestionSourceId}")
                 }
                 OperationStatus.Failed -> {
-                    println("❌ Errore ingestione!")
-                    println("   ID: ${status.ingestionSourceId}")
-                    println("   Codice Errore: ${status.errorCode}")
-                    println("   Dettagli: ${status.details}")
+                    logger.info("Errore ingestione!")
+                    logger.info("ID: ${status.ingestionSourceId}")
+                    logger.info("Codice Errore: ${status.errorCode}")
+                    logger.info("Dettagli: ${status.details}")
                 }
                 OperationStatus.Queued,
                 OperationStatus.Pending -> {
-                    println("⏳ Ingestione in coda/pendente per ID: ${status.ingestionSourceId}")
+                    logger.info("Ingestione in coda/pendente per ID: ${status.ingestionSourceId}")
                     // Nota: Se usi QueuedIngestClient, questo è lo stato normale immediato
                 }
                 else -> {
-                    println("ℹ️ Stato sconosciuto: ${status.status}")
+                    logger.info("Stato sconosciuto: ${status.status}")
                 }
             }
         }

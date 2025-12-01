@@ -47,13 +47,17 @@ class AccountingDataIngestionJob(
                 logger.info("Ingesting names for ${fileList.size} files")
 
                 // 3. Call your service (Assuming it takes a List or Flux and returns a Mono)
-                ingestionService.ingestDataStream(Flux.fromIterable(fileNames))
+                ingestionService
+                    .ingestDataStream(Flux.fromIterable(fileNames))
                     .doOnSuccess { logger.info("File names ingestion completed") }
                     .onErrorResume { e ->
                         // Decide: Do you want to stop everything if ingestion fails?
                         // If yes: return Mono.error(e)
                         // If no (continue downloading anyway):
-                        logger.error("Error during file name data ingestion, proceeding with download.", e)
+                        logger.error(
+                            "Error during file name data ingestion, proceeding with download.",
+                            e,
+                        )
                         Mono.empty()
                     }
                     // 4. Once ingestion is done, pass the original list downstream

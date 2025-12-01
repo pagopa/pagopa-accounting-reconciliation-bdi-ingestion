@@ -3,6 +3,9 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.azure.kusto.ingest.IngestClient
 import com.microsoft.azure.kusto.ingest.IngestionProperties
+import com.microsoft.azure.kusto.ingest.result.IngestionResult
+import com.microsoft.azure.kusto.ingest.result.IngestionStatus
+import com.microsoft.azure.kusto.ingest.result.OperationStatus
 import com.microsoft.azure.kusto.ingest.source.StreamSourceInfo
 import java.io.ByteArrayInputStream
 import java.time.Duration
@@ -44,7 +47,7 @@ class IngestionService(
 
                 val ingestionProperties = IngestionProperties(database, table)
                 ingestionProperties.reportLevel =
-                    IngestionProperties.IngestionReportLevel.FAILURES_ONLY
+                    IngestionProperties.IngestionReportLevel.FAILURES_AND_SUCCESSES
                 ingestionProperties.dataFormat = IngestionProperties.DataFormat.JSON
                 // ingestionProperties.ingestionMapping.setIngestionMappingReference(mappingName,IngestionMapping.IngestionMappingKind.JSON)
 
@@ -53,11 +56,41 @@ class IngestionService(
 
                 // L'SDK gestisce l'upload verso Azure Storage Queue
                 val ingestionResult = ingestClient.ingestFromStream(sourceInfo, ingestionProperties)
-                logger.info("IngestionResult: $ingestionResult")
+
+                analizzaRisultato(ingestionResult)
+
+                logger.info("IngestionResult: ${ingestionResult.ingestionStatusCollection}")
             }
             .subscribeOn(
                 reactor.core.scheduler.Schedulers.boundedElastic()
             ) // Spostiamo l'IO bloccante su un thread dedicato
             .then()
+    }
+
+    fun analizzaRisultato(result: IngestionResult) {
+        // L'oggetto contiene una lista di stati (di solito uno per blob/file)
+        val statuses: List<IngestionStatus> = result.ingestionStatusCollection
+
+        for (status in statuses) {
+            when (status.status) {
+                OperationStatus.Succeeded -> {
+                    println("✅ Ingestione completata per ID: ${status.ingestionSourceId}")
+                }
+                OperationStatus.Failed -> {
+                    println("❌ Errore ingestione!")
+                    println("   ID: ${status.ingestionSourceId}")
+                    println("   Codice Errore: ${status.errorCode}")
+                    println("   Dettagli: ${status.details}")
+                }
+                OperationStatus.Queued,
+                OperationStatus.Pending -> {
+                    println("⏳ Ingestione in coda/pendente per ID: ${status.ingestionSourceId}")
+                    // Nota: Se usi QueuedIngestClient, questo è lo stato normale immediato
+                }
+                else -> {
+                    println("ℹ️ Stato sconosciuto: ${status.status}")
+                }
+            }
+        }
     }
 }

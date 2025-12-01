@@ -8,9 +8,21 @@
         "isRegularFile" : true,
         "size" : 6131,
         "lastModifiedTime" : 1762456781293
+      },
+      {
+        "fileName" : "test_2.zip.p7m",
+        "isDirectory" : false,
+        "isRegularFile" : true,
+        "size" : 6131,
+        "lastModifiedTime" : 1762456781293
+      },
+      {
+        "fileName" : "test_empty.zip.p7m",
+        "isDirectory" : false,
+        "isRegularFile" : true,
+        "size" : 1445,
+        "lastModifiedTime" : 1762456781293
       }
     ]
   }
-
-
 }

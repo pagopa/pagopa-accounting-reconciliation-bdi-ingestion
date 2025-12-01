@@ -2,13 +2,13 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.clients
 
 import it.pagopa.generated.bdi.api.AccountingApi
 import it.pagopa.generated.bdi.model.ListAccountingFiles200ResponseDto
-import java.io.File
 import java.nio.charset.StandardCharsets
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.given
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.springframework.core.io.Resource
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.TestPropertySource
@@ -24,19 +24,24 @@ class BdiClientTest {
 
     @Test
     fun `getAvailableAccountingFiles returns a Mono emitting a ListAccountingFiles200ResponseDto`() {
+        // pre-requisites
         val listAccountingFiles200ResponseDto = ListAccountingFiles200ResponseDto()
 
         given(bdiAccountingApi.listAccountingFiles())
             .willReturn(Mono.just(listAccountingFiles200ResponseDto))
 
+        // test
         StepVerifier.create(bdiClient.getAvailableAccountingFiles())
             .expectNext(listAccountingFiles200ResponseDto)
             .verifyComplete()
+
+        // verifications
         verify(bdiAccountingApi, times(1)).listAccountingFiles()
     }
 
     @Test
     fun `getAvailableAccountingFiles propagates exception on API error`() {
+        // pre-requisites
         val ex =
             WebClientResponseException(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
@@ -48,23 +53,30 @@ class BdiClientTest {
 
         given(bdiAccountingApi.listAccountingFiles()).willReturn(Mono.error(ex))
 
+        // test
         StepVerifier.create(bdiClient.getAvailableAccountingFiles())
             .expectError(WebClientResponseException::class.java)
             .verify()
+
+        // verifications
         verify(bdiAccountingApi, times(1)).listAccountingFiles()
     }
 
     @Test
-    fun `getAccountingFile returns a Mono emitting a File`() {
-        val mockFile = mock(File::class.java)
+    fun `getAccountingFile returns a Mono emitting a Resource`() {
+        // pre-requisites
+        val mockResource = mock(Resource::class.java)
+        val filename = "mock-file.zip"
 
-        given(mockFile.name).willReturn("mock-file.zip")
-        given(bdiAccountingApi.getAccountingFile(mockFile.name)).willReturn(Mono.just(mockFile))
+        given(bdiAccountingApi.getAccountingFile(filename)).willReturn(Mono.just(mockResource))
 
-        StepVerifier.create(bdiClient.getAccountingFile(mockFile.name))
-            .expectNext(mockFile)
+        // test
+        StepVerifier.create(bdiClient.getAccountingFile(filename))
+            .expectNext(mockResource)
             .verifyComplete()
-        verify(bdiAccountingApi, times(1)).getAccountingFile(mockFile.name)
+
+        // verifications
+        verify(bdiAccountingApi, times(1)).getAccountingFile(filename)
     }
 
     @Test
@@ -84,6 +96,8 @@ class BdiClientTest {
         StepVerifier.create(bdiClient.getAccountingFile(fileName))
             .expectError(WebClientResponseException::class.java)
             .verify()
+
+        // verifications
         verify(bdiAccountingApi, times(1)).getAccountingFile(fileName)
     }
 }

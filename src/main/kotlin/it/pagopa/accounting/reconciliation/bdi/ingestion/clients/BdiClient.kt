@@ -2,8 +2,8 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.clients
 
 import it.pagopa.generated.bdi.api.AccountingApi
 import it.pagopa.generated.bdi.model.ListAccountingFiles200ResponseDto
-import java.io.File
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.Resource
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
@@ -14,8 +14,8 @@ class BdiClient(private val bdiAccountingApi: AccountingApi) {
     /**
      * Calls the listAccountingFiles API
      *
-     * @return A Mono emitting a ListAccountingFiles200ResponseDto containing the list of files or
-     *   an error
+     * @return A [Mono] emitting a [ListAccountingFiles200ResponseDto] containing the list of files
+     *   or an error
      */
     fun getAvailableAccountingFiles(): Mono<ListAccountingFiles200ResponseDto> {
         return bdiAccountingApi.listAccountingFiles().doOnError {
@@ -27,9 +27,9 @@ class BdiClient(private val bdiAccountingApi: AccountingApi) {
      * Calls the getAccountingFile API with a file name as a filter
      *
      * @param fileName The name of the file to download
-     * @return A Mono emitting a File or an error
+     * @return A [Mono] emitting a [Resource] or an error
      */
-    fun getAccountingFile(fileName: String): Mono<File> {
+    fun getAccountingFile(fileName: String): Mono<Resource> {
         return bdiAccountingApi.getAccountingFile(fileName).doOnError {
             logger.error("Error calling getAccountingFile API with fileName: $fileName", it)
         }

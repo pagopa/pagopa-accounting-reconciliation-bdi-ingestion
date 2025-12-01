@@ -43,7 +43,7 @@ class AccountingDataIngestionJob(
                 it
             }
             .onErrorResume { e ->
-                logger.error("", e)
+                logger.error("Error during the file name data ingestion.", e)
                 Flux.empty()
             }
             .flatMap(

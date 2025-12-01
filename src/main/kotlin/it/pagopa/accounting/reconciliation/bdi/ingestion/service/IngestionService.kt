@@ -6,6 +6,7 @@ import com.microsoft.azure.kusto.ingest.IngestionProperties
 import com.microsoft.azure.kusto.ingest.source.StreamSourceInfo
 import java.io.ByteArrayInputStream
 import java.time.Duration
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -19,9 +20,11 @@ class IngestionService(
     @Value("\${azuredataexplorer.re.table}") private val table: String,
     @Value("\${azuredataexplorer.re.mapping-name}") private val mappingName: String,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
 
     // Funzione principale che accetta un flusso di dati
     fun <T : Any> ingestDataStream(dataStream: Flux<T>): Mono<Void> {
+        logger.info("ingestDataStream called for the dataStream: $dataStream")
         return dataStream
             // Raggruppa fino a 1000 elementi O aspetta 5 secondi (strategia buffer)
             .bufferTimeout(1000, Duration.ofSeconds(5))
@@ -30,6 +33,7 @@ class IngestionService(
     }
 
     private fun <T : Any> sendBatchToAdx(batch: List<T>): Mono<Void> {
+        logger.info("sendBatchToAdx called")
         return Mono.fromCallable {
                 // Convertiamo la lista di oggetti in una singola stringa JSON separata da newline
                 // (NDJSON)
@@ -48,7 +52,8 @@ class IngestionService(
                 val sourceInfo = StreamSourceInfo(inputStream)
 
                 // L'SDK gestisce l'upload verso Azure Storage Queue
-                ingestClient.ingestFromStream(sourceInfo, ingestionProperties)
+                val ingestionResult = ingestClient.ingestFromStream(sourceInfo, ingestionProperties)
+                logger.info("IngestionResult: $ingestionResult")
             }
             .subscribeOn(
                 reactor.core.scheduler.Schedulers.boundedElastic()

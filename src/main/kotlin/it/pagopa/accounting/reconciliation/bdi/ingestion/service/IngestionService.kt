@@ -16,9 +16,9 @@ import reactor.core.publisher.Mono
 class IngestionService(
     private val ingestClient: IngestClient,
     private val objectMapper: ObjectMapper,
-    @Value("\${azuredataexplorer.re.database}") private val database: String,
-    @Value("\${azuredataexplorer.re.table}") private val table: String,
-    // @Value("\${azuredataexplorer.re.mapping-name}") private val mappingName: String,
+    @Value("\${azuredataexplorer.database}") private val database: String,
+    @Value("\${azuredataexplorer.database.table}") private val table: String,
+    // @Value("\${azuredataexplorer.mapping.name}") private val mappingName: String,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 

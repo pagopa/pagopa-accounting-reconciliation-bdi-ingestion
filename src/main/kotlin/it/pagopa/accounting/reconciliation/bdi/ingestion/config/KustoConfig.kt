@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-class KustoConfig(@Value("\${azuredataexplorer.re.endpoint}") private val endpoint: String) {
+class KustoConfig(@Value("\${azuredataexplorer.domain}") private val domain: String) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Bean
@@ -20,7 +20,7 @@ class KustoConfig(@Value("\${azuredataexplorer.re.endpoint}") private val endpoi
         logger.info("Initializing RE Kusto Ingest client")
         val kcsb =
             ConnectionStringBuilder.createWithTokenCredential(
-                "https://ingest-$endpoint",
+                "https://ingest-$domain",
                 DefaultAzureCredentialBuilder().build(),
             )
         return IngestClientFactory.createClient(kcsb)
@@ -31,7 +31,7 @@ class KustoConfig(@Value("\${azuredataexplorer.re.endpoint}") private val endpoi
         logger.info("Initializing RE Kusto Query client")
         val kcsb =
             ConnectionStringBuilder.createWithTokenCredential(
-                "https://$endpoint",
+                "https://$domain",
                 DefaultAzureCredentialBuilder().build(),
             )
         return ClientFactory.createClient(kcsb)

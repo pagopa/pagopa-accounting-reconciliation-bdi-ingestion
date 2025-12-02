@@ -22,14 +22,15 @@ class IngestionService(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    fun <T : Any> ingestDataStream(dataStream: Flux<T>): Mono<Void> {
+    fun <T : Any> ingestDataStream(dataStream: Flux<T>): Mono<Unit> {
         return dataStream
             .bufferTimeout(1000, Duration.ofSeconds(5))
             .flatMap { batch -> sendBatchToAdx(batch) }
             .then()
+            .thenReturn(Unit)
     }
 
-    private fun <T : Any> sendBatchToAdx(batch: List<T>): Mono<Void> {
+    private fun <T : Any> sendBatchToAdx(batch: List<T>): Mono<Unit> {
         return Mono.fromCallable {
                 val jsonPayload = batch.joinToString("\n") { objectMapper.writeValueAsString(it) }
                 val inputStream = ByteArrayInputStream(jsonPayload.toByteArray())
@@ -41,9 +42,9 @@ class IngestionService(
                 // ingestionProperties.ingestionMapping.setIngestionMappingReference(mappingName,IngestionMapping.IngestionMappingKind.JSON)
 
                 val sourceInfo = StreamSourceInfo(inputStream)
-                val ingestionResult = ingestClient.ingestFromStream(sourceInfo, ingestionProperties)
+                ingestClient.ingestFromStream(sourceInfo, ingestionProperties)
             }
             .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
-            .then()
+            .map { Unit }
     }
 }

@@ -66,7 +66,7 @@ class BdiClientTest {
     fun `getAccountingFile returns a Mono emitting a Resource`() {
         // pre-requisites
         val mockResource = mock(Resource::class.java)
-        val filename: String = "mock-file.zip"
+        val filename = "mock-file.zip"
 
         given(bdiAccountingApi.getAccountingFile(filename)).willReturn(Mono.just(mockResource))
 

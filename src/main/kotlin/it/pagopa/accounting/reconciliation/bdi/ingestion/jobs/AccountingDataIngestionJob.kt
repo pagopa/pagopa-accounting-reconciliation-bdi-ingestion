@@ -19,9 +19,9 @@ import reactor.core.publisher.Mono
 @Component
 class AccountingDataIngestionJob(
     private val bdiClient: BdiClient,
-    private val ingestionService: IngestionService,
     private val reactiveP7mZipService: ReactiveP7mZipService,
     private val xmlParserService: XmlParserService,
+    private val ingestionService: IngestionService,
 ) : ScheduledJob<JobConfiguration, Long> {
     private val logger = LoggerFactory.getLogger(javaClass)
 

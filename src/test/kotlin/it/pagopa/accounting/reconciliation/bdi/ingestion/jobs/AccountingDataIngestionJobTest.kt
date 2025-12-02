@@ -2,6 +2,7 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.jobs
 
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccountingData
+import it.pagopa.accounting.reconciliation.bdi.ingestion.service.IngestionService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.ReactiveP7mZipService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.XmlParserService
 import it.pagopa.generated.bdi.model.FileMetadataDto
@@ -24,8 +25,15 @@ class AccountingDataIngestionJobTest {
     private val bdiClient: BdiClient = mock()
     private val reactiveP7mZipService: ReactiveP7mZipService = mock()
     private val xmlParserService: XmlParserService = mock()
+    private val ingestionService: IngestionService = mock()
 
-    private val job = AccountingDataIngestionJob(bdiClient, reactiveP7mZipService, xmlParserService)
+    private val job =
+        AccountingDataIngestionJob(
+            bdiClient,
+            reactiveP7mZipService,
+            xmlParserService,
+            ingestionService,
+        )
 
     @Test
     fun `process should download, extract and count all valid files`() {

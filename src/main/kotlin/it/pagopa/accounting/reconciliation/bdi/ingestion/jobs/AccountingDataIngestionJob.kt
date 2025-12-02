@@ -1,15 +1,12 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.jobs
 
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
-import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccounting
 import it.pagopa.accounting.reconciliation.bdi.ingestion.jobs.config.JobConfiguration
-import it.pagopa.accounting.reconciliation.bdi.ingestion.service.IngestionService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.ReactiveP7mZipService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.XmlParserService
 import it.pagopa.generated.bdi.model.FileMetadataDto
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -21,12 +18,13 @@ class AccountingDataIngestionJob(
     private val bdiClient: BdiClient,
     private val reactiveP7mZipService: ReactiveP7mZipService,
     private val xmlParserService: XmlParserService,
-    private val ingestionService: IngestionService,
 ) : ScheduledJob<JobConfiguration, Long> {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     override fun id(): String = "bdi-accounting-data-ingestion"
 
+    // TODO: save bdiAccountingData content on Data Explorer
+    // TODO: save downloaded file name
     override fun process(configuration: JobConfiguration?): Mono<Long> {
         logger.info("Starting BDI accounting data ingestion job")
         return bdiClient
@@ -37,52 +35,42 @@ class AccountingDataIngestionJob(
             .doOnNext { logger.info("Downloading file: ${it.fileName}") }
             .flatMap(
                 { fileMetadataDto ->
-                    val dataStream: Flux<BdiAccounting> =
-                        bdiClient
-                            .getAccountingFile(fileMetadataDto.fileName)
-                            .flatMapMany { resource ->
-                                reactiveP7mZipService.extractAndMap(
-                                    p7mZipInputStream = resource.inputStream,
-                                    entryNameFilter = { it.endsWith(".xml", ignoreCase = true) },
-                                    mapper = { xmlName, stream ->
-                                        val accountingData =
-                                            xmlParserService.parseAccountingXmlFromStream(stream)
-                                        BdiAccounting(
-                                            zipFileName = fileMetadataDto.fileName,
-                                            xmlFileName = xmlName,
-                                            end2endId = accountingData.end2endId,
-                                            causale = accountingData.causale,
-                                            importo = accountingData.importo,
-                                            bancaOrdinante = accountingData.bancaOrdinante,
-                                        )
-                                    },
-                                )
-                            }
-                            .doOnNext {
-                                logger.debug(
-                                    "Saving: Zip={}, Xml={}, end2endId={}, causale={}, importo={}, bancaOrdinante={}",
-                                    it.zipFileName,
-                                    it.xmlFileName,
-                                    it.end2endId,
-                                    it.causale,
-                                    it.importo,
-                                    it.bancaOrdinante,
-                                )
-                            }
-                    // Save data on Data Explorer
-                    ingestionService.ingestDataStream(dataStream).onErrorResume { e ->
-                        if (e is IllegalArgumentException) {
-                            logger.warn(
-                                "Skipping empty or invalid P7M file: ${fileMetadataDto.fileName}"
-                            )
-                        } else {
-                            logger.error(
-                                "Unexpected error processing file: ${fileMetadataDto.fileName}",
-                                e,
+                    bdiClient
+                        .getAccountingFile(fileMetadataDto.fileName)
+                        .flatMapMany { resource ->
+                            // stream data pipeline: Stream -> Decrypt -> Unzip -> Parse -> Object
+                            reactiveP7mZipService.extractAndMap(
+                                p7mZipInputStream = resource.inputStream,
+                                entryNameFilter = { fileName ->
+                                    fileName.endsWith(".xml", ignoreCase = true)
+                                },
+                                mapper = { stream ->
+                                    xmlParserService.parseAccountingXmlFromStream(stream)
+                                },
                             )
                         }
-                        Mono.empty()
-                    }
+                        .doOnNext { bdiAccountingData ->
+                            logger.debug(
+                                "Processed: [end2endId={}, causale={}, importo={}, bancaOrdinante={}]",
+                                bdiAccountingData.end2endId,
+                                bdiAccountingData.causale,
+                                bdiAccountingData.importo,
+                                bdiAccountingData.bancaOrdinante,
+                            )
+                        }
+                        .onErrorResume { e ->
+                            if (e is IllegalArgumentException) {
+                                logger.warn(
+                                    "Skipping empty or invalid P7M file: ${fileMetadataDto.fileName}"
+                                )
+                            } else {
+                                logger.error(
+                                    "Unexpected error processing file: ${fileMetadataDto.fileName}",
+                                    e,
+                                )
+                            }
+                            Mono.empty()
+                        }
                 },
                 5,
             )

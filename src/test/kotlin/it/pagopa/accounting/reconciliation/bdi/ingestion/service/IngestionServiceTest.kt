@@ -42,7 +42,7 @@ class IngestionServiceTest {
         val propsCaptor = ArgumentCaptor.forClass(IngestionProperties::class.java)
 
         // test
-        StepVerifier.create(ingestionService.ingestDataStream(dataStream)).verifyComplete()
+        StepVerifier.create(ingestionService.ingestDataStream(dataStream)).expectNext(Unit).verifyComplete()
 
         // verifications
         verify(ingestClient, times(1))

@@ -3,7 +3,6 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.jobs
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccounting
 import it.pagopa.accounting.reconciliation.bdi.ingestion.jobs.config.JobConfiguration
-import it.pagopa.accounting.reconciliation.bdi.ingestion.service.DataExplorerQueryService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.IngestionService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.ReactiveP7mZipService
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.XmlParserService
@@ -23,7 +22,6 @@ class AccountingDataIngestionJob(
     private val ingestionService: IngestionService,
     private val reactiveP7mZipService: ReactiveP7mZipService,
     private val xmlParserService: XmlParserService,
-    private val dataExplorerQueryService: DataExplorerQueryService
 ) : ScheduledJob<JobConfiguration, Long> {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -36,8 +34,6 @@ class AccountingDataIngestionJob(
             .onErrorResume { Mono.empty() }
             .flatMapIterable { it.files }
             .filterWhen { shouldDownloadFile(it) }
-            .collectList()
-            .flatMapMany { dataExplorerQueryService.getAllNotSavedFile(it) }
             .doOnNext { logger.info("Downloading file: ${it.fileName}") }
             .flatMap(
                 { fileMetadataDto ->

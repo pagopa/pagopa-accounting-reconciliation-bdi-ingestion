@@ -88,10 +88,10 @@ microservice-chart:
     BDI_SERVER_CONNECTION_TIMEOUT_MILLIS: "10000"
     ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
     BDI_CERTIFICATE_PATH: /mnt/secrets-store/bdi-accounting-reconciliation-platform-pagopa-it
+    AZURE_DATA_EXPLORER_RE_ENDPOINT: pagopaudataexplorer.westeurope.kusto.windows.net
     AZURE_DATA_EXPLORER_RE_DATABASE: re
     AZURE_DATA_EXPLORER_RE_DATABASE_TABLE: test_bdi
     AZURE_DATA_EXPLORER_RE_MAPPING_NAME: test_bdi
-    AZURE_DATA_EXPLORER_RE_ENDPOINT: pagopaudataexplorer.westeurope.kusto.windows.net
   envSecret:
     OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     BDI_CERTIFICATE: bdi-accounting-reconciliation-platform-pagopa-it

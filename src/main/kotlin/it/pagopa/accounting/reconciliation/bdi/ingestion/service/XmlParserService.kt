@@ -1,41 +1,52 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 
-import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlDocument
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccountingData
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.OpiRendAnalitico
 import java.io.InputStream
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 
 @Service
-class XmlParserService {
+class XmlParserService(private val ingestionService: IngestionService) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     private val xmlMapper =
         XmlMapper().apply {
             registerKotlinModule()
             configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            // Configure the mapper to not close the input stream automatically
-            factory.configure(JsonParser.Feature.AUTO_CLOSE_SOURCE, false)
         }
 
     /**
-     * Parses an accounting XML [InputStream] and extract the needed data.
-     *
-     * @param inputStream The source [InputStream] containing the accounting XML data.
+     * @param accountingXmlDocument The [AccountingXmlDocument] containing the XML file content.
      * @return A [BdiAccountingData] containing the extracted values.
+     *
+     * Parses an accounting XML [InputStream] and extract the needed data.
      */
-    fun parseAccountingXmlFromStream(inputStream: InputStream): BdiAccountingData {
-        val invoice = xmlMapper.readValue(inputStream, OpiRendAnalitico::class.java)
+    fun processXmlFile(accountingXmlDocument: AccountingXmlDocument): Mono<Unit> {
+        return Mono.fromCallable {
+                logger.info("Processing XML file: ${accountingXmlDocument.filename}")
+                val opiRendAnalitico =
+                    xmlMapper.readValue(
+                        accountingXmlDocument.xmlContent,
+                        OpiRendAnalitico::class.java,
+                    )
 
-        val end2endId = invoice.movimento?.end2endId
-        val causale = invoice.movimento?.causale
-        val importo = invoice.movimento?.importo
-        val bancaOrdinante = invoice.movimento?.dettaglioMovimento?.entrata?.bancaOrdinante
+                val end2endId = opiRendAnalitico.movimento?.end2endId
+                val causale = opiRendAnalitico.movimento?.causale
+                val importo = opiRendAnalitico.movimento?.importo
+                val bancaOrdinante =
+                    opiRendAnalitico.movimento?.dettaglioMovimento?.entrata?.bancaOrdinante
 
-        return BdiAccountingData(end2endId, causale, importo, bancaOrdinante)
+                BdiAccountingData(end2endId, causale, importo, bancaOrdinante)
+            }
+            .flatMap { ingestionService.ingestElement(it) }
+            // TODO: update xml table
+            .subscribeOn(Schedulers.boundedElastic())
     }
 }

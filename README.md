@@ -49,7 +49,6 @@ If you want to customize the application environment, reference this table:
 | AZURE_DATA_EXPLORER_DOMAIN                        | Data Explorer domain                                    | string  |         |
 | AZURE_DATA_EXPLORER_DATABASE                      | Data Explorer database name                             | string  |         |
 | AZURE_DATA_EXPLORER_DATABASE_TABLE                | Data Explorer table name                                | string  |         |
-| AZURE_DATA_EXPLORER_MAPPING_NAME                  | Data Explorer table mapping name                        | string  |         |
 
 ### Run docker container
 

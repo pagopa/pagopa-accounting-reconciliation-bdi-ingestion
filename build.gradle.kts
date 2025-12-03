@@ -35,6 +35,7 @@ object Dependencies {
   const val mockitoVersion = "6.1.0"
   const val JsonNullableJacksonVersion = "0.2.8"
   const val bouncyCastleVersion = "1.82"
+  const val kustoIngest = "7.0.4"
 }
 
 dependencyLocking { lockAllConfigurations() }
@@ -60,6 +61,7 @@ dependencies {
     "org.openapitools:jackson-databind-nullable:${Dependencies.JsonNullableJacksonVersion}"
   )
   implementation("org.bouncycastle:bcpkix-jdk18on:${Dependencies.bouncyCastleVersion}")
+  implementation("com.microsoft.azure.kusto:kusto-ingest:${Dependencies.kustoIngest}")
 
   // tests
   testImplementation("org.mockito.kotlin:mockito-kotlin:${Dependencies.mockitoVersion}")

@@ -3,19 +3,17 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 import com.fasterxml.jackson.core.JsonProcessingException
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlDocument
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccountingData
+import java.math.BigDecimal
+import java.time.Instant
+import kotlin.test.Test
 import org.assertj.core.api.Assertions.assertThat
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.given
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.math.BigDecimal
-import java.time.Instant
-import kotlin.test.Test
 
 class XmlParserServiceTest {
     private val ingestionService: IngestionService = mock()
@@ -41,7 +39,15 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument = AccountingXmlDocument("test-id", "test_zipname","test_filename", Instant.now(),xmlContent,"status_test")
+        val accountingXmlDocument =
+            AccountingXmlDocument(
+                "test-id",
+                "test_zipname",
+                "test_filename",
+                Instant.now(),
+                xmlContent,
+                "status_test",
+            )
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
 
@@ -79,7 +85,15 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument = AccountingXmlDocument("test-id", "test_zipname","test_filename", Instant.now(),xmlContent,"status_test")
+        val accountingXmlDocument =
+            AccountingXmlDocument(
+                "test-id",
+                "test_zipname",
+                "test_filename",
+                Instant.now(),
+                xmlContent,
+                "status_test",
+            )
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
 
@@ -117,7 +131,15 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument = AccountingXmlDocument("test-id", "test_zipname","test_filename", Instant.now(),xmlContent,"status_test")
+        val accountingXmlDocument =
+            AccountingXmlDocument(
+                "test-id",
+                "test_zipname",
+                "test_filename",
+                Instant.now(),
+                xmlContent,
+                "status_test",
+            )
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
 
@@ -151,7 +173,15 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument = AccountingXmlDocument("test-id", "test_zipname","test_filename", Instant.now(),xmlContent,"status_test")
+        val accountingXmlDocument =
+            AccountingXmlDocument(
+                "test-id",
+                "test_zipname",
+                "test_filename",
+                Instant.now(),
+                xmlContent,
+                "status_test",
+            )
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
 
@@ -179,7 +209,15 @@ class XmlParserServiceTest {
         // pre-requisites
         val brokenXml = "<OPI_REND_ANALITICO><movimento>No Closing Tag"
 
-        val accountingXmlDocument = AccountingXmlDocument("test-id", "test_zipname","test_filename", Instant.now(),brokenXml,"status_test")
+        val accountingXmlDocument =
+            AccountingXmlDocument(
+                "test-id",
+                "test_zipname",
+                "test_filename",
+                Instant.now(),
+                brokenXml,
+                "status_test",
+            )
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
 
@@ -189,6 +227,5 @@ class XmlParserServiceTest {
         StepVerifier.create(xmlParserService.processXmlFile(accountingXmlDocument))
             .expectSubscription()
             .expectError(JsonProcessingException::class.java)
-
     }
 }

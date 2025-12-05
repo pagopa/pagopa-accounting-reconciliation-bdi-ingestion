@@ -32,7 +32,6 @@ class IngestionServiceTest {
         // pre-requisites
         val data1 = TestData("item1")
         val data2 = TestData("item2")
-        val dataStream = Flux.just(data1, data2)
 
         given(objectMapper.writeValueAsString(data1)).willReturn("""{"id":"item1"}""")
         given(objectMapper.writeValueAsString(data2)).willReturn("""{"id":"item2"}""")
@@ -42,9 +41,7 @@ class IngestionServiceTest {
         val propsCaptor = ArgumentCaptor.forClass(IngestionProperties::class.java)
 
         // test
-        StepVerifier.create(ingestionService.ingestDataStream(dataStream))
-            .expectNext(Unit)
-            .verifyComplete()
+        StepVerifier.create(ingestionService.ingestElement(data1)).expectNext(Unit).verifyComplete()
 
         // verifications
         verify(ingestClient, times(1))
@@ -63,9 +60,7 @@ class IngestionServiceTest {
         val inputStream: InputStream = capturedSourceInfo.stream
         val content = String(inputStream.readAllBytes(), StandardCharsets.UTF_8)
 
-        val expectedPayload =
-            """{"id":"item1"}
-{"id":"item2"}"""
+        val expectedPayload = """{"id":"item1"}"""
 
         assertEquals(expectedPayload, content)
     }
@@ -80,7 +75,7 @@ class IngestionServiceTest {
             .willThrow(RuntimeException("Serialization error"))
 
         // test
-        StepVerifier.create(ingestionService.ingestDataStream(stream))
+        StepVerifier.create(ingestionService.ingestElement(stream))
             .expectError(RuntimeException::class.java)
             .verify()
 

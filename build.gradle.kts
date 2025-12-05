@@ -64,6 +64,12 @@ dependencies {
   implementation("org.bouncycastle:bcpkix-jdk18on:${Dependencies.bouncyCastleVersion}")
   implementation("com.microsoft.azure.kusto:kusto-ingest:${Dependencies.kustoIngest}")
 
+  // Risolve il problema SSL/HTTP2 su Mac Apple Silicon
+  runtimeOnly("io.netty:netty-tcnative-boringssl-static::osx-aarch_64")
+
+  // Risolve l'altro errore DNS che vedevi nei log
+  runtimeOnly("io.netty:netty-resolver-dns-native-macos::osx-aarch_64")
+
   // tests
   testImplementation("org.mockito.kotlin:mockito-kotlin:${Dependencies.mockitoVersion}")
   testImplementation("org.springframework.boot:spring-boot-starter-test")

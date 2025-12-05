@@ -1,5 +1,7 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 
+import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipDocument
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -7,9 +9,11 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.KeyPairGenerator
 import java.security.Security
+import java.time.Instant
 import java.util.Date
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.test.assertTrue
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
 import org.bouncycastle.cms.CMSProcessableByteArray
@@ -20,10 +24,20 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
+import org.mockito.kotlin.given
+import org.mockito.kotlin.times
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.willReturn
+import org.springframework.core.io.InputStreamResource
+import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
 class ReactiveP7mZipServiceTest {
-    private val reactiveP7mZipService = ReactiveP7mZipService()
+    private val bdiClient: BdiClient = mock()
+    private val xmlParserService: XmlParserService = mock()
+    private val reactiveP7mZipService = ReactiveP7mZipService(bdiClient, xmlParserService)
 
     companion object {
         @JvmStatic
@@ -36,88 +50,71 @@ class ReactiveP7mZipServiceTest {
     }
 
     @Test
-    fun `extractAndMap should decrypt P7M, unzip, filter files and map content`() {
-        // pre-requisites
+    fun `should process the zip file and call the xmlParserService`() {
+
         val files =
             mapOf(
-                "test_1.test" to "Test 1",
-                "test_2.test" to "Test 2",
+                "test_1.xml" to "Test 1",
+                "test_2.xml" to "",
                 "test.txt" to "This should be ignored",
                 "directory/" to "",
             )
+        val zipFile = P7mTestGenerator.createP7mWithZip(files)
+        val resource = InputStreamResource(zipFile)
 
-        val resultFlux =
-            reactiveP7mZipService.extractAndMap(
-                p7mZipInputStream = P7mTestGenerator.createP7mWithZip(files),
-                entryNameFilter = { it.endsWith(".test") },
-                mapper = { stream -> String(stream.readAllBytes(), StandardCharsets.UTF_8) },
-            )
+        val accountingZipDocument =
+            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
 
-        // test
-        StepVerifier.create(resultFlux)
-            .expectNextMatches { it.contains("Test 1") || it.contains("Test 2") }
-            .expectNextMatches { it.contains("Test 1") || it.contains("Test 2") }
-            .expectComplete()
-            .verify()
+        given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
+        given(xmlParserService.processXmlFile(any())).willReturn { Mono.just(Unit) }
+
+        StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
+            .expectNext(Unit)
+            .verifyComplete()
+
+        verify(bdiClient, times(1)).getAccountingFile("test_file")
+        verify(xmlParserService, times(2)).processXmlFile(any())
     }
 
     @Test
-    fun `extractAndMap should skip files where mapper throws exception`() {
-        // pre-requisites
-        val files = mapOf("valid.xml" to "Valid Content", "invalid.xml" to "Error")
+    fun `should process the zip file and return an error if P7M is a Detached Signature (no content inside)`() {
 
-        val resultFlux =
-            reactiveP7mZipService.extractAndMap(
-                p7mZipInputStream = P7mTestGenerator.createP7mWithZip(files),
-                entryNameFilter = { it.endsWith(".xml") },
-                mapper = { stream ->
-                    val content = String(stream.readAllBytes())
-                    if (content == "Error") {
-                        throw RuntimeException("Mapper failed!")
-                    }
-                    content
-                },
-            )
+        val files = mapOf("test.xml" to "<root>content</root>")
+        val zipFile = P7mTestGenerator.createP7mWithZip(files, encapsulate = false)
 
-        // test
-        StepVerifier.create(resultFlux).expectNext("Valid Content").expectComplete().verify()
+        val resource = InputStreamResource(zipFile)
+
+        val accountingZipDocument =
+            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+
+        given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
+
+        StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
+            .expectErrorSatisfies { error ->
+                assertTrue { error.javaClass == IllegalArgumentException::class.java }
+                assertTrue { error.message == "No content found in P7M" }
+            }
+            .verify()
+
+        verify(bdiClient, times(1)).getAccountingFile("test_file")
     }
 
     @Test
     fun `extractAndMap should fail if input is not a P7M file`() {
         // pre-requisites
         val inputStream = ByteArrayInputStream("test".toByteArray())
+        val resource = InputStreamResource(inputStream)
 
-        val resultFlux =
-            reactiveP7mZipService.extractAndMap(
-                p7mZipInputStream = inputStream,
-                entryNameFilter = { true },
-                mapper = { it.toString() },
-            )
+        val accountingZipDocument =
+            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
 
-        // test
-        StepVerifier.create(resultFlux).expectError().verify()
-    }
+        given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
 
-    @Test
-    fun `extractAndMap should fail if P7M is a Detached Signature (no content inside)`() {
-        // pre-requisites
-        val files = mapOf("test.xml" to "<root>content</root>")
-
-        val resultFlux =
-            reactiveP7mZipService.extractAndMap(
-                // encapsulate = false creates a detached signature
-                p7mZipInputStream = P7mTestGenerator.createP7mWithZip(files, encapsulate = false),
-                entryNameFilter = { true },
-                mapper = { it.toString() },
-            )
-
-        // test
-        StepVerifier.create(resultFlux)
-            .expectErrorMatches { error ->
-                error is IllegalArgumentException && error.message == "No content found in P7M"
-            }
+        StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
+            .expectError()
             .verify()
+
+        verify(bdiClient, times(1)).getAccountingFile("test_file")
     }
 }
 
@@ -130,7 +127,7 @@ object P7mTestGenerator {
         return ByteArrayInputStream(p7mBytes)
     }
 
-    private fun createZip(files: Map<String, String>): ByteArray {
+    fun createZip(files: Map<String, String>): ByteArray {
         val stream = ByteArrayOutputStream()
         ZipOutputStream(stream).use { zos ->
             files.forEach { (name, content) ->
@@ -147,7 +144,7 @@ object P7mTestGenerator {
         return stream.toByteArray()
     }
 
-    private fun signData(data: ByteArray, encapsulate: Boolean): ByteArray {
+    fun signData(data: ByteArray, encapsulate: Boolean): ByteArray {
         val keyPairGen = KeyPairGenerator.getInstance("RSA")
         keyPairGen.initialize(2048)
         val keyPair = keyPairGen.generateKeyPair()

@@ -24,9 +24,9 @@ class DataIngestionScheduledJob(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Scheduled(cron = "\${accounting-data-ingestion-job.execution.cron}")
-    fun accountingDataIngestion() {
+    fun accountingDataIngestion(): Mono<Void> {
         logger.info("Starting accounting data ingestion scheduled job")
-        bdiClient
+        return bdiClient
             .getAvailableAccountingFiles()
             .flatMapIterable { it.files }
             .filterWhen { shouldDownloadFile(it) }
@@ -47,7 +47,7 @@ class DataIngestionScheduledJob(
             )
             .doOnNext { logger.info("Retrieved BDI accounting file list successfully.") }
             .flatMap({ reactiveP7mZipService.processZipFile(it) }, 5)
-            .subscribe()
+            .then()
     }
 
     private fun shouldDownloadFile(file: FileMetadataDto): Mono<Boolean> {

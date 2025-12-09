@@ -45,7 +45,7 @@ class XmlParserService(private val ingestionService: IngestionService) {
 
                 BdiAccountingData(end2endId, causale, importo, bancaOrdinante)
             }
-            .flatMap { ingestionService.ingestElement(it) }
+            .flatMap({ ingestionService.ingestElement(it) })
             // TODO: update xml table
             .subscribeOn(Schedulers.boundedElastic())
     }

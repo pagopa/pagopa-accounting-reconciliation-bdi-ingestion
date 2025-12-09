@@ -32,23 +32,25 @@ cp .env.local.example .env
 If you want to customize the application environment, reference this table:
 
 
-| Variable name                                     | Description                                             | type    | default |
-|---------------------------------------------------|---------------------------------------------------------|---------|---------|
-| ROOT_LOGGING_LEVEL                                | Application root logger level                           | string  | INFO    |
-| APP_LOGGING_LEVEL                                 | it.pagopa logger level                                  | string  | INFO    |
-| WEB_LOGGING_LEVEL                                 | Web logger level                                        | string  | INFO    |
-| NETTY_TCP_SSL_PROVIDER_LOGGING_LEVEL              | Netty SSL provider logger level                         | string  | DEBUG   |
-| NETTY_HANDLER_SSL_LOGGING_LEVEL                   | Netty SSL handler logger level                          | string  | DEBUG   |
-| BDI_SERVER_URI                                    | BDI server uri                                          | string  |         |
-| BDI_SERVER_READ_TIMEOUT_MILLIS                    | Read timeout in milliseconds for the bdi server         | integer |         |
-| BDI_SERVER_CONNECTION_TIMEOUT_MILLIS              | Connection timeout in milliseconds for the bdi server   | integer |         |
-| ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON      | Accounting data ingestion job execution cron expression | string  |         |
-| ACCOUNTING_DATA_INGESTION_JOB_RETRIES             | Accounting data ingestion job number of retries         | integer |         |
-| ACCOUNTING_DATA_INGESTION_JOB_MIN_BACKOFF_SECONDS | Accounting data ingestion job min backoff in seconds    | integer |         |
-| BDI_CERTIFICATE_PATH                              | Path to the BDI pem certificate                         | string  |         |
-| AZURE_DATA_EXPLORER_DOMAIN                        | Data Explorer domain                                    | string  |         |
-| AZURE_DATA_EXPLORER_DATABASE                      | Data Explorer database name                             | string  |         |
-| AZURE_DATA_EXPLORER_DATABASE_TABLE                | Data Explorer table name                                | string  |         |
+| Variable name                                       | Description                                                           | type    | default |
+|-----------------------------------------------------|-----------------------------------------------------------------------|---------|---------|
+| ROOT_LOGGING_LEVEL                                  | Application root logger level                                         | string  | INFO    |
+| APP_LOGGING_LEVEL                                   | it.pagopa logger level                                                | string  | INFO    |
+| WEB_LOGGING_LEVEL                                   | Web logger level                                                      | string  | INFO    |
+| NETTY_TCP_SSL_PROVIDER_LOGGING_LEVEL                | Netty SSL provider logger level                                       | string  | DEBUG   |
+| NETTY_HANDLER_SSL_LOGGING_LEVEL                     | Netty SSL handler logger level                                        | string  | DEBUG   |
+| BDI_SERVER_URI                                      | BDI server uri                                                        | string  |         |
+| BDI_SERVER_READ_TIMEOUT_MILLIS                      | Read timeout in milliseconds for the bdi server                       | integer |         |
+| BDI_SERVER_CONNECTION_TIMEOUT_MILLIS                | Connection timeout in milliseconds for the bdi server                 | integer |         |
+| ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON        | Accounting data ingestion job execution cron expression               | string  |         |
+| ACCOUNTING_DATA_INGESTION_JOB_RETRIES               | Accounting data ingestion job number of retries                       | integer |         |
+| ACCOUNTING_DATA_INGESTION_JOB_MIN_BACKOFF_SECONDS   | Accounting data ingestion job min backoff in seconds                  | integer |         |
+| ACCOUNTING_DATA_INGESTION_JOB_UNZIP_CONCURRENCY     | Accounting data ingestion job unzip service parallelism               | integer |         |
+| ACCOUNTING_DATA_INGESTION_JOB_PARSING_CONCURRENCY   | Accounting data ingestion job parsing service parallelism             | integer |         |
+| BDI_CERTIFICATE_PATH                                | Path to the BDI pem certificate                                       | string  |         |
+| AZURE_DATA_EXPLORER_DOMAIN                          | Data Explorer domain                                                  | string  |         |
+| AZURE_DATA_EXPLORER_DATABASE                        | Data Explorer database name                                           | string  |         |
+| AZURE_DATA_EXPLORER_DATABASE_TABLE                  | Data Explorer table name                                              | string  |         |
 
 ### Run docker container
 

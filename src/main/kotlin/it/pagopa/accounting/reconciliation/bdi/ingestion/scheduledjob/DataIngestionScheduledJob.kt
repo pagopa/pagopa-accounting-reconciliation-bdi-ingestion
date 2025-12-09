@@ -20,6 +20,8 @@ class DataIngestionScheduledJob(
     @Value("\${accounting-data-ingestion-job.retries}") private val retries: Long,
     @Value("\${accounting-data-ingestion-job.minBackoffSeconds}")
     private val minBackoffSeconds: Long,
+    @Value("\${accounting-data-ingestion-job.concurrency_unzip}")
+    private val zipServiceConcurrency: Int,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -46,7 +48,7 @@ class DataIngestionScheduledJob(
                     }
             )
             .doOnNext { logger.info("Retrieved BDI accounting file list successfully.") }
-            .flatMap({ reactiveP7mZipService.processZipFile(it) }, 5)
+            .flatMap({ reactiveP7mZipService.processZipFile(it) }, zipServiceConcurrency)
             .then()
     }
 

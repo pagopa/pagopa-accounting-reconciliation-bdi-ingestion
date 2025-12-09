@@ -16,6 +16,7 @@ import java.util.zip.ZipOutputStream
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.test.assertTrue
+import org.assertj.core.api.Assertions.assertThat
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
 import org.bouncycastle.cms.CMSProcessableByteArray
@@ -40,7 +41,7 @@ import reactor.test.StepVerifier
 class ReactiveP7mZipServiceTest {
     private val bdiClient: BdiClient = mock()
     private val xmlParserService: XmlParserService = mock()
-    private val reactiveP7mZipService = ReactiveP7mZipService(bdiClient, xmlParserService)
+    private val reactiveP7mZipService = ReactiveP7mZipService(bdiClient, xmlParserService, 1)
 
     companion object {
         @JvmStatic
@@ -147,14 +148,15 @@ class ReactiveP7mZipServiceTest {
 
     @Test
     fun `processZipEntries should stop processing zip if the sink is cancelled`() {
+
         val files =
             mapOf(
-                "test_1.xml" to "Test 1",
+                "test_1.xml" to "test",
                 "test_2.xml" to "",
                 "test.txt" to "This should be ignored",
                 "directory/" to "",
             )
-        val zipFile = P7mTestGenerator.createP7mWithCorruptedZip(files)
+        val zipFile = P7mTestGenerator.createP7mWithZip(files)
         val spyStream = spy(zipFile)
         val resource = InputStreamResource(spyStream)
 
@@ -163,12 +165,18 @@ class ReactiveP7mZipServiceTest {
 
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
 
+        given(xmlParserService.processXmlFile(any()))
+            .willThrow(RuntimeException("STOP PROCESSING!"))
+
+        // 4. ESECUZIONE
+        // Ci aspettiamo un errore, non il completamento
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
-            .thenCancel()
+            .expectErrorSatisfies { e -> assertThat(e.message).isEqualTo("STOP PROCESSING!") }
             .verify()
 
-        assert(spyStream.available() > 0)
         verify(bdiClient, times(1)).getAccountingFile("test_file")
+        // Varify that only one file is unzipped then only the parsing is called only one time
+        verify(xmlParserService, times(1)).processXmlFile(any())
     }
 }
 

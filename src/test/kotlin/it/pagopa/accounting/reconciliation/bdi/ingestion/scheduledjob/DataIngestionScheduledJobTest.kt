@@ -24,8 +24,15 @@ class DataIngestionScheduledJobTest {
     private val reactiveP7mZipService: ReactiveP7mZipService = mock()
     private val retries: Long = 2
     private val minBackoffSeconds: Long = 5
+    private val zipServiceConcurrency: Int = 1
     private val dataIngestionScheduledJob =
-        DataIngestionScheduledJob(bdiClient, reactiveP7mZipService, retries, minBackoffSeconds)
+        DataIngestionScheduledJob(
+            bdiClient,
+            reactiveP7mZipService,
+            retries,
+            minBackoffSeconds,
+            zipServiceConcurrency,
+        )
 
     @Test
     fun `Should get files from bdiClient and pass to the reactiveP7mZipService`() {

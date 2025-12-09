@@ -11,6 +11,7 @@ import org.bouncycastle.cms.CMSSignedDataParser
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.FluxSink
@@ -21,6 +22,8 @@ import reactor.core.scheduler.Schedulers
 class ReactiveP7mZipService(
     private val bdiClient: BdiClient,
     private val xmlParserService: XmlParserService,
+    @Value("\${accounting-data-ingestion-job.concurrency_parsing}")
+    private val parsingServiceConcurrency: Int,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -35,7 +38,7 @@ class ReactiveP7mZipService(
             .flatMapMany { resource -> decryptSignedStream(resource.inputStream) }
             // TODO: write on xml table
             // TODO: update zip table
-            .flatMap { xmlParserService.processXmlFile(it) }
+            .flatMap({ xmlParserService.processXmlFile(it) }, parsingServiceConcurrency)
             .then()
             .thenReturn(Unit)
     }

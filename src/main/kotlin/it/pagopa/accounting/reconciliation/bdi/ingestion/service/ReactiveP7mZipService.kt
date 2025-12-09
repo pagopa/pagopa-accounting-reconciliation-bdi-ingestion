@@ -74,7 +74,7 @@ class ReactiveP7mZipService(
         BufferedInputStream(decryptedStream).use { bufferedCmsStream ->
             ZipInputStream(bufferedCmsStream).use { zipStream ->
                 var entry = zipStream.nextEntry
-                while (entry != null) {
+                while (entry != null && !sink.isCancelled) {
                     if (!entry.isDirectory && entry.name.endsWith(".xml", ignoreCase = true)) {
                         try {
                             val contentString = String(zipStream.readAllBytes(), Charsets.UTF_8)

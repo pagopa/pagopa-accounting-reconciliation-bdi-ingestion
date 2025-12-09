@@ -13,6 +13,8 @@ import java.time.Instant
 import java.util.Date
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.test.assertTrue
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
@@ -27,6 +29,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.kotlin.any
 import org.mockito.kotlin.given
+import org.mockito.kotlin.spy
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.willReturn
@@ -116,6 +119,57 @@ class ReactiveP7mZipServiceTest {
 
         verify(bdiClient, times(1)).getAccountingFile("test_file")
     }
+
+    @Test
+    fun `processZipEntries should close the zip if the file is corrupted and continue without error`() {
+        val files =
+            mapOf(
+                "test_1.xml" to "Test 1",
+                "test_2.xml" to "",
+                "test.txt" to "This should be ignored",
+                "directory/" to "",
+            )
+        val zipFile = P7mTestGenerator.createP7mWithCorruptedZip(files)
+        val resource = InputStreamResource(zipFile)
+
+        val accountingZipDocument =
+            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+
+        given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
+        given(xmlParserService.processXmlFile(any())).willReturn { Mono.just(Unit) }
+
+        StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
+            .expectNext(Unit)
+            .verifyComplete()
+
+        verify(bdiClient, times(1)).getAccountingFile("test_file")
+    }
+
+    @Test
+    fun `processZipEntries should stop processing zip if the sink is cancelled`() {
+        val files =
+            mapOf(
+                "test_1.xml" to "Test 1",
+                "test_2.xml" to "",
+                "test.txt" to "This should be ignored",
+                "directory/" to "",
+            )
+        val zipFile = P7mTestGenerator.createP7mWithCorruptedZip(files)
+        val spyStream = spy(zipFile)
+        val resource = InputStreamResource(spyStream)
+
+        val accountingZipDocument =
+            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+
+        given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
+
+        StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
+            .thenCancel()
+            .verify()
+
+        assert(spyStream.available() > 0)
+        verify(bdiClient, times(1)).getAccountingFile("test_file")
+    }
 }
 
 /** Utility object to generate P7M files in memory */
@@ -123,6 +177,15 @@ object P7mTestGenerator {
 
     fun createP7mWithZip(files: Map<String, String>, encapsulate: Boolean = true): InputStream {
         val zipBytes = createZip(files)
+        val p7mBytes = signData(zipBytes, encapsulate)
+        return ByteArrayInputStream(p7mBytes)
+    }
+
+    fun createP7mWithCorruptedZip(
+        files: Map<String, String>,
+        encapsulate: Boolean = true,
+    ): InputStream {
+        val zipBytes = createTrunkedZip(files)
         val p7mBytes = signData(zipBytes, encapsulate)
         return ByteArrayInputStream(p7mBytes)
     }
@@ -142,6 +205,27 @@ object P7mTestGenerator {
             }
         }
         return stream.toByteArray()
+    }
+
+    fun createTrunkedZip(files: Map<String, String>): ByteArray {
+        val stream = ByteArrayOutputStream()
+        ZipOutputStream(stream).use { zos ->
+            files.forEach { (name, content) ->
+                val entry = ZipEntry(name)
+                zos.putNextEntry(entry)
+
+                if (!name.endsWith("/")) {
+                    zos.write(content.toByteArray(StandardCharsets.UTF_8))
+                }
+
+                zos.closeEntry()
+            }
+        }
+        stream.size()
+        val zipByteArray = stream.toByteArray()
+        val brokenZipByteArray = zipByteArray.copyOfRange(0, zipByteArray.lastIndex - 10)
+
+        return brokenZipByteArray
     }
 
     fun signData(data: ByteArray, encapsulate: Boolean): ByteArray {

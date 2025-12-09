@@ -1,9 +1,9 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.documents
 
-import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 
 class AccountingZipDocumentTest {
 
@@ -16,12 +16,8 @@ class AccountingZipDocumentTest {
         val status = "DOWNLOADED"
 
         // WHEN
-        val document = AccountingZipDocument(
-            id = id,
-            filename = filename,
-            uploadedAt = now,
-            status = status
-        )
+        val document =
+            AccountingZipDocument(id = id, filename = filename, uploadedAt = now, status = status)
 
         // THEN
         assertThat(document.id).isEqualTo(id)
@@ -34,10 +30,7 @@ class AccountingZipDocumentTest {
     fun `should check default values`() {
         // WHEN
         // Istanziamo omettendo 'id' e 'uploadedAt' che hanno valori di default
-        val document = AccountingZipDocument(
-            filename = "test.zip",
-            status = "PENDING"
-        )
+        val document = AccountingZipDocument(filename = "test.zip", status = "PENDING")
 
         // THEN
         assertThat(document.id).isNull() // Il default è null
@@ -46,56 +39,49 @@ class AccountingZipDocumentTest {
 
         // Verifichiamo che uploadedAt sia stato valorizzato con un Instant recente
         assertThat(document.uploadedAt).isNotNull()
-        assertThat(document.uploadedAt).isCloseTo(Instant.now(), org.assertj.core.data.TemporalUnitWithinOffset(1, ChronoUnit.SECONDS))
+        assertThat(document.uploadedAt)
+            .isCloseTo(
+                Instant.now(),
+                org.assertj.core.data.TemporalUnitWithinOffset(1, ChronoUnit.SECONDS),
+            )
     }
 
     @Test
     fun `should verify equals and hashCode contract`() {
         // GIVEN
         val now = Instant.now()
-        val doc1 = AccountingZipDocument(
-            id = "1",
-            filename = "file.zip",
-            uploadedAt = now,
-            status = "OK"
-        )
-        val doc2 = AccountingZipDocument(
-            id = "1",
-            filename = "file.zip",
-            uploadedAt = now,
-            status = "OK"
-        )
-        val doc3 = AccountingZipDocument(
-            id = "2", // ID diverso
-            filename = "file.zip",
-            uploadedAt = now,
-            status = "OK"
-        )
+        val doc1 =
+            AccountingZipDocument(id = "1", filename = "file.zip", uploadedAt = now, status = "OK")
+        val doc2 =
+            AccountingZipDocument(id = "1", filename = "file.zip", uploadedAt = now, status = "OK")
+        val doc3 =
+            AccountingZipDocument(
+                id = "2", // ID diverso
+                filename = "file.zip",
+                uploadedAt = now,
+                status = "OK",
+            )
 
         // THEN
-        assertThat(doc1).isEqualTo(doc2)      // Sono uguali per valore
+        assertThat(doc1).isEqualTo(doc2) // Sono uguali per valore
         assertThat(doc1.hashCode()).isEqualTo(doc2.hashCode())
-        assertThat(doc1).isNotEqualTo(doc3)   // Sono diversi
+        assertThat(doc1).isNotEqualTo(doc3) // Sono diversi
     }
 
     @Test
     fun `should verify copy mechanism`() {
         // GIVEN
-        val original = AccountingZipDocument(
-            id = "1",
-            filename = "original.zip",
-            status = "NEW"
-        )
+        val original = AccountingZipDocument(id = "1", filename = "original.zip", status = "NEW")
 
         // WHEN
         // Copiamo cambiando solo lo status
         val modified = original.copy(status = "PROCESSED")
 
         // THEN
-        assertThat(modified.id).isEqualTo(original.id)         // Invariato
+        assertThat(modified.id).isEqualTo(original.id) // Invariato
         assertThat(modified.filename).isEqualTo(original.filename) // Invariato
         assertThat(modified.uploadedAt).isEqualTo(original.uploadedAt) // Invariato
-        assertThat(modified.status).isEqualTo("PROCESSED")     // Modificato
+        assertThat(modified.status).isEqualTo("PROCESSED") // Modificato
 
         // Assicuriamoci che l'originale non sia stato toccato (immutabilità)
         assertThat(original.status).isEqualTo("NEW")
@@ -104,11 +90,8 @@ class AccountingZipDocumentTest {
     @Test
     fun `toString should contain field values`() {
         // Questo è utile per il debugging nei log
-        val document = AccountingZipDocument(
-            id = "test-id",
-            filename = "my-file.zip",
-            status = "ERROR"
-        )
+        val document =
+            AccountingZipDocument(id = "test-id", filename = "my-file.zip", status = "ERROR")
 
         val stringRepresentation = document.toString()
 

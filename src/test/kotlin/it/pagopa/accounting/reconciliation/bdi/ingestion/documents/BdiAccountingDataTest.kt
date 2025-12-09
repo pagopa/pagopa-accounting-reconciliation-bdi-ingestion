@@ -1,8 +1,8 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.documents
 
+import java.math.BigDecimal
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 
 class BdiAccountingDataTest {
 
@@ -15,12 +15,13 @@ class BdiAccountingDataTest {
         val banca = "Intesa Sanpaolo"
 
         // WHEN
-        val data = BdiAccountingData(
-            end2endId = e2eId,
-            causale = causale,
-            importo = importo,
-            bancaOrdinante = banca
-        )
+        val data =
+            BdiAccountingData(
+                end2endId = e2eId,
+                causale = causale,
+                importo = importo,
+                bancaOrdinante = banca,
+            )
 
         // THEN
         assertThat(data.end2endId).isEqualTo(e2eId)
@@ -34,12 +35,13 @@ class BdiAccountingDataTest {
         // Questa classe ha tutti i campi nullable, verifichiamo che accetti null ovunque
 
         // WHEN
-        val data = BdiAccountingData(
-            end2endId = null,
-            causale = null,
-            importo = null,
-            bancaOrdinante = null
-        )
+        val data =
+            BdiAccountingData(
+                end2endId = null,
+                causale = null,
+                importo = null,
+                bancaOrdinante = null,
+            )
 
         // THEN
         assertThat(data.end2endId).isNull()
@@ -64,7 +66,8 @@ class BdiAccountingDataTest {
 
     @Test
     fun `should verify BigDecimal equality edge case`() {
-        // NOTA BENE: In Java/Kotlin, BigDecimal("10") non è uguale a BigDecimal("10.00") se usi equals()
+        // NOTA BENE: In Java/Kotlin, BigDecimal("10") non è uguale a BigDecimal("10.00") se usi
+        // equals()
         // Le data class usano equals(), quindi ci aspettiamo che siano DIVERSI.
 
         val dataScale0 = BdiAccountingData("ID", "C", BigDecimal("10"), "B")
@@ -76,12 +79,13 @@ class BdiAccountingDataTest {
     @Test
     fun `should support copy with modification`() {
         // GIVEN
-        val original = BdiAccountingData(
-            end2endId = "OLD_ID",
-            causale = "Old Causale",
-            importo = BigDecimal("10.00"),
-            bancaOrdinante = "Old Bank"
-        )
+        val original =
+            BdiAccountingData(
+                end2endId = "OLD_ID",
+                causale = "Old Causale",
+                importo = BigDecimal("10.00"),
+                bancaOrdinante = "Old Bank",
+            )
 
         // WHEN
         // Copiamo cambiando solo l'importo

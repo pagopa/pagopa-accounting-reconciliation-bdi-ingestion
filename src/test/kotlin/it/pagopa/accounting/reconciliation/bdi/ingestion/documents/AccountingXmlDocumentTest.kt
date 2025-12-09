@@ -1,22 +1,23 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.documents
 
+import java.time.Instant
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import java.time.Instant
 
 class AccountingXmlDocumentTest {
 
     @Test
     fun `should create instance with all fields populated`() {
         val now = Instant.now()
-        val doc = AccountingXmlDocument(
-            id = "123",
-            zipFilename = "data.zip",
-            filename = "file.xml",
-            uploadedAt = now,
-            xmlContent = "<root></root>",
-            status = "PENDING"
-        )
+        val doc =
+            AccountingXmlDocument(
+                id = "123",
+                zipFilename = "data.zip",
+                filename = "file.xml",
+                uploadedAt = now,
+                xmlContent = "<root></root>",
+                status = "PENDING",
+            )
 
         assertThat(doc.id).isEqualTo("123")
         assertThat(doc.zipFilename).isEqualTo("data.zip")
@@ -29,12 +30,13 @@ class AccountingXmlDocumentTest {
     @Test
     fun `should use default values when creating instance`() {
         // Verifica che id sia null e uploadedAt sia popolato automaticamente
-        val doc = AccountingXmlDocument(
-            zipFilename = "data.zip",
-            filename = "file.xml",
-            xmlContent = "<root></root>",
-            status = "PENDING"
-        )
+        val doc =
+            AccountingXmlDocument(
+                zipFilename = "data.zip",
+                filename = "file.xml",
+                xmlContent = "<root></root>",
+                status = "PENDING",
+            )
 
         assertThat(doc.id).isNull()
         assertThat(doc.uploadedAt).isNotNull()
@@ -45,22 +47,24 @@ class AccountingXmlDocumentTest {
     fun `should verify equality and hashcode`() {
         // Test fondamentale per le Data Class che vengono usate in Set o Map
         val now = Instant.now()
-        val doc1 = AccountingXmlDocument(
-            id = "1",
-            zipFilename = "A",
-            filename = "B",
-            uploadedAt = now,
-            xmlContent = "C",
-            status = "OK"
-        )
-        val doc2 = AccountingXmlDocument(
-            id = "1",
-            zipFilename = "A",
-            filename = "B",
-            uploadedAt = now,
-            xmlContent = "C",
-            status = "OK"
-        )
+        val doc1 =
+            AccountingXmlDocument(
+                id = "1",
+                zipFilename = "A",
+                filename = "B",
+                uploadedAt = now,
+                xmlContent = "C",
+                status = "OK",
+            )
+        val doc2 =
+            AccountingXmlDocument(
+                id = "1",
+                zipFilename = "A",
+                filename = "B",
+                uploadedAt = now,
+                xmlContent = "C",
+                status = "OK",
+            )
 
         assertThat(doc1).isEqualTo(doc2)
         assertThat(doc1.hashCode()).isEqualTo(doc2.hashCode())
@@ -68,12 +72,13 @@ class AccountingXmlDocumentTest {
 
     @Test
     fun `should support copy mechanism`() {
-        val doc1 = AccountingXmlDocument(
-            zipFilename = "original.zip",
-            filename = "original.xml",
-            xmlContent = "content",
-            status = "NEW"
-        )
+        val doc1 =
+            AccountingXmlDocument(
+                zipFilename = "original.zip",
+                filename = "original.xml",
+                xmlContent = "content",
+                status = "NEW",
+            )
 
         val doc2 = doc1.copy(status = "PROCESSED")
 

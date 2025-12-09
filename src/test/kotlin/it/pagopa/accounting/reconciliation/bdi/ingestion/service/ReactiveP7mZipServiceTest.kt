@@ -34,6 +34,7 @@ import org.mockito.kotlin.spy
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.willReturn
+import org.mockito.kotlin.willThrow
 import org.springframework.core.io.InputStreamResource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -122,7 +123,7 @@ class ReactiveP7mZipServiceTest {
     }
 
     @Test
-    fun `processZipEntries should close the zip if the file is corrupted and continue without error`() {
+    fun `processZipEntries should not stop service if the zip file is corrupted`() {
         val files =
             mapOf(
                 "test_1.xml" to "Test 1",
@@ -147,6 +148,35 @@ class ReactiveP7mZipServiceTest {
     }
 
     @Test
+    fun `processZipEntries should not stop service if the xml parsing generate an error`() {
+        val files =
+            mapOf(
+                "test_1.xml" to "Test 1",
+                "test_2.xml" to "",
+                "test.txt" to "This should be ignored",
+                "directory/" to "",
+            )
+        val zipFile = P7mTestGenerator.createP7mWithZip(files)
+        val resource = InputStreamResource(zipFile)
+
+        val accountingZipDocument =
+            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+
+        given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
+        given(xmlParserService.processXmlFile(any()))
+            .willReturn(Mono.error(RuntimeException("Serialization error")))
+
+        StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
+            .expectNext(Unit)
+            .verifyComplete()
+
+        verify(bdiClient, times(1)).getAccountingFile("test_file")
+        // Should be called 2 times because 2 files are good and because the service doesn't stop to
+        // work after the first Exception
+        verify(xmlParserService, times(2)).processXmlFile(any())
+    }
+
+    @Test
     fun `processZipEntries should stop processing zip if the sink is cancelled`() {
 
         val files =
@@ -168,8 +198,6 @@ class ReactiveP7mZipServiceTest {
         given(xmlParserService.processXmlFile(any()))
             .willThrow(RuntimeException("STOP PROCESSING!"))
 
-        // 4. ESECUZIONE
-        // Ci aspettiamo un errore, non il completamento
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
             .expectErrorSatisfies { e -> assertThat(e.message).isEqualTo("STOP PROCESSING!") }
             .verify()
@@ -187,6 +215,15 @@ object P7mTestGenerator {
         val zipBytes = createZip(files)
         val p7mBytes = signData(zipBytes, encapsulate)
         return ByteArrayInputStream(p7mBytes)
+    }
+
+    fun createP7mWithCorruptedInputStream(
+        files: Map<String, String>,
+        encapsulate: Boolean = true,
+    ): InputStream {
+        val zipBytes = createZip(files)
+        val p7mBytes = signData(zipBytes, encapsulate)
+        return BrokenInputStream(p7mBytes)
     }
 
     fun createP7mWithCorruptedZip(
@@ -216,24 +253,35 @@ object P7mTestGenerator {
     }
 
     fun createTrunkedZip(files: Map<String, String>): ByteArray {
-        val stream = ByteArrayOutputStream()
-        ZipOutputStream(stream).use { zos ->
-            files.forEach { (name, content) ->
-                val entry = ZipEntry(name)
-                zos.putNextEntry(entry)
+        //        val stream = ByteArrayOutputStream()
+        //        ZipOutputStream(stream).use { zos ->
+        //            files.forEach { (name, content) ->
+        //                val entry = ZipEntry(name)
+        //                zos.putNextEntry(entry)
+        //
+        //                if (!name.endsWith("/")) {
+        //                    zos.write(content.toByteArray(StandardCharsets.UTF_8))
+        //                }
+        //                // Don't close the entry and force a flush
+        //                zos.flush()
+        //            }
+        //        }
+        //
+        //        return stream.toByteArray()
+        val bos = ByteArrayOutputStream()
+        val zos = ZipOutputStream(bos)
 
-                if (!name.endsWith("/")) {
-                    zos.write(content.toByteArray(StandardCharsets.UTF_8))
-                }
+        // Iniziamo un'entry valida
+        zos.putNextEntry(ZipEntry("corrupted.xml"))
+        zos.write("Inizio dati validi".toByteArray())
+        // NON CHIUDIAMO L'ENTRY CORRETTAMENTE (zos.closeEntry())
+        // OPPURE: Scriviamo byte a caso senza chiudere lo zip
 
-                zos.closeEntry()
-            }
-        }
-        stream.size()
-        val zipByteArray = stream.toByteArray()
-        val brokenZipByteArray = zipByteArray.copyOfRange(0, zipByteArray.lastIndex - 10)
+        // Forziamo la scrittura parziale
+        zos.flush()
 
-        return brokenZipByteArray
+        // Prendiamo i byte grezzi (questo è un ZIP rotto, senza Central Directory finale)
+        return bos.toByteArray()
     }
 
     fun signData(data: ByteArray, encapsulate: Boolean): ByteArray {
@@ -265,5 +313,31 @@ object P7mTestGenerator {
         val signedData = gen.generate(processable, encapsulate)
 
         return signedData.encoded
+    }
+
+    // This InputStream throw an error after someone read from it
+    class BrokenInputStream(val validZipBytes: ByteArray) : InputStream() {
+        val wrapped = ByteArrayInputStream(validZipBytes)
+        var count = 0
+
+        override fun read(): Int {
+            val b = wrapped.read()
+            checkPoison()
+            return b
+        }
+
+        override fun read(b: ByteArray, off: Int, len: Int): Int {
+            val read = wrapped.read(b, off, len)
+            checkPoison()
+            return read
+        }
+
+        fun checkPoison() {
+            count++
+            // throw an error after you read from it
+            if (count > 0) {
+                throw RuntimeException("Disk Failure Simulation")
+            }
+        }
     }
 }

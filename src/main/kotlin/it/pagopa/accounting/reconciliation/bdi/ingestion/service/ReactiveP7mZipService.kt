@@ -35,10 +35,25 @@ class ReactiveP7mZipService(
         logger.info("Processing ZIP file: ${accountingZipDocument.filename}")
         return bdiClient
             .getAccountingFile(accountingZipDocument.filename)
-            .flatMapMany { resource -> decryptSignedStream(resource.inputStream) }
+            .flatMapMany { resource ->
+                decryptSignedStream(resource.inputStream).onErrorResume { e ->
+                    logger.error(
+                        "Error decrypting/unzipping file ${accountingZipDocument.filename}: ${e.message}"
+                    )
+                    Flux.empty()
+                }
+            }
             // TODO: write on xml table
             // TODO: update zip table
-            .flatMap({ xmlParserService.processXmlFile(it) }, parsingServiceConcurrency)
+            .flatMap(
+                {
+                    xmlParserService.processXmlFile(it).onErrorResume { e ->
+                        logger.error("Error processing XML entry ${it.filename}: ${e.message}")
+                        Mono.empty()
+                    }
+                },
+                parsingServiceConcurrency,
+            )
             .then()
             .thenReturn(Unit)
     }
@@ -80,7 +95,8 @@ class ReactiveP7mZipService(
                 while (entry != null && !sink.isCancelled) {
                     if (!entry.isDirectory && entry.name.endsWith(".xml", ignoreCase = true)) {
                         try {
-                            val contentString = String(zipStream.readAllBytes(), Charsets.UTF_8)
+                            val bytes = zipStream.readAllBytes()
+                            val contentString = String(bytes, Charsets.UTF_8)
                             val accountingXmlDocument =
                                 AccountingXmlDocument(
                                     zipFilename = "",

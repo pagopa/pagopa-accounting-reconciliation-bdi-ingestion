@@ -28,7 +28,7 @@ class AccountingZipDocumentTest {
 
         val document = AccountingZipDocument(filename = "test.zip", status = "PENDING")
 
-        assertThat(document.id).isNull() // Il default è null
+        assertThat(document.id).isNull()
         assertThat(document.filename).isEqualTo("test.zip")
         assertThat(document.status).isEqualTo("PENDING")
 
@@ -49,15 +49,15 @@ class AccountingZipDocumentTest {
             AccountingZipDocument(id = "1", filename = "file.zip", uploadedAt = now, status = "OK")
         val doc3 =
             AccountingZipDocument(
-                id = "2", // ID diverso
+                id = "2",
                 filename = "file.zip",
                 uploadedAt = now,
                 status = "OK",
             )
 
-        assertThat(doc1).isEqualTo(doc2) // Sono uguali per valore
+        assertThat(doc1).isEqualTo(doc2)
         assertThat(doc1.hashCode()).isEqualTo(doc2.hashCode())
-        assertThat(doc1).isNotEqualTo(doc3) // Sono diversi
+        assertThat(doc1).isNotEqualTo(doc3)
     }
 
     @Test

@@ -82,7 +82,7 @@ class AccountingXmlDocumentTest {
         val doc2 = doc1.copy(status = "PROCESSED")
 
         assertThat(doc2.status).isEqualTo("PROCESSED")
-        assertThat(doc2.zipFilename).isEqualTo("original.zip") // Gli altri campi restano uguali
+        assertThat(doc2.zipFilename).isEqualTo("original.zip")
         assertThat(doc2).isNotEqualTo(doc1)
     }
 }

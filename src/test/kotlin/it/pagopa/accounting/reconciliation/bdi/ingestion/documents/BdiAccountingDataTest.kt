@@ -8,13 +8,12 @@ class BdiAccountingDataTest {
 
     @Test
     fun `should create instance with all values populated`() {
-        // GIVEN
+
         val e2eId = "E2E123456789"
         val causale = "Bonifico Stipendio"
         val importo = BigDecimal("1250.50")
         val banca = "Intesa Sanpaolo"
 
-        // WHEN
         val data =
             BdiAccountingData(
                 end2endId = e2eId,
@@ -23,7 +22,6 @@ class BdiAccountingDataTest {
                 bancaOrdinante = banca,
             )
 
-        // THEN
         assertThat(data.end2endId).isEqualTo(e2eId)
         assertThat(data.causale).isEqualTo(causale)
         assertThat(data.importo).isEqualTo(importo)
@@ -32,9 +30,7 @@ class BdiAccountingDataTest {
 
     @Test
     fun `should handle null values correctly`() {
-        // Questa classe ha tutti i campi nullable, verifichiamo che accetti null ovunque
 
-        // WHEN
         val data =
             BdiAccountingData(
                 end2endId = null,
@@ -43,7 +39,6 @@ class BdiAccountingDataTest {
                 bancaOrdinante = null,
             )
 
-        // THEN
         assertThat(data.end2endId).isNull()
         assertThat(data.causale).isNull()
         assertThat(data.importo).isNull()
@@ -52,13 +47,12 @@ class BdiAccountingDataTest {
 
     @Test
     fun `should verify equality and hashcode`() {
-        // GIVEN
+
         val importo = BigDecimal("100.00")
         val data1 = BdiAccountingData("ID1", "Causale A", importo, "Banca A")
         val data2 = BdiAccountingData("ID1", "Causale A", importo, "Banca A")
         val data3 = BdiAccountingData("ID2", "Causale B", BigDecimal("50.00"), "Banca B")
 
-        // THEN
         assertThat(data1).isEqualTo(data2)
         assertThat(data1.hashCode()).isEqualTo(data2.hashCode())
         assertThat(data1).isNotEqualTo(data3)
@@ -66,9 +60,6 @@ class BdiAccountingDataTest {
 
     @Test
     fun `should verify BigDecimal equality edge case`() {
-        // NOTA BENE: In Java/Kotlin, BigDecimal("10") non è uguale a BigDecimal("10.00") se usi
-        // equals()
-        // Le data class usano equals(), quindi ci aspettiamo che siano DIVERSI.
 
         val dataScale0 = BdiAccountingData("ID", "C", BigDecimal("10"), "B")
         val dataScale2 = BdiAccountingData("ID", "C", BigDecimal("10.00"), "B")
@@ -78,7 +69,7 @@ class BdiAccountingDataTest {
 
     @Test
     fun `should support copy with modification`() {
-        // GIVEN
+
         val original =
             BdiAccountingData(
                 end2endId = "OLD_ID",
@@ -87,13 +78,10 @@ class BdiAccountingDataTest {
                 bancaOrdinante = "Old Bank",
             )
 
-        // WHEN
-        // Copiamo cambiando solo l'importo
         val modified = original.copy(importo = BigDecimal("99.99"))
 
-        // THEN
         assertThat(modified.importo).isEqualTo(BigDecimal("99.99"))
-        // Gli altri campi devono rimanere invariati
+
         assertThat(modified.end2endId).isEqualTo("OLD_ID")
         assertThat(modified.causale).isEqualTo("Old Causale")
         assertThat(modified.bancaOrdinante).isEqualTo("Old Bank")

@@ -29,7 +29,7 @@ class AccountingXmlDocumentTest {
 
     @Test
     fun `should use default values when creating instance`() {
-        // Verifica che id sia null e uploadedAt sia popolato automaticamente
+        //
         val doc =
             AccountingXmlDocument(
                 zipFilename = "data.zip",

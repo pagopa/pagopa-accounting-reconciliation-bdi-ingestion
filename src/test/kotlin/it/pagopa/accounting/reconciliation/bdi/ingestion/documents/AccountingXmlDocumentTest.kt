@@ -29,7 +29,6 @@ class AccountingXmlDocumentTest {
 
     @Test
     fun `should use default values when creating instance`() {
-        //
         val doc =
             AccountingXmlDocument(
                 zipFilename = "data.zip",
@@ -45,7 +44,7 @@ class AccountingXmlDocumentTest {
 
     @Test
     fun `should verify equality and hashcode`() {
-        // Test fondamentale per le Data Class che vengono usate in Set o Map
+
         val now = Instant.now()
         val doc1 =
             AccountingXmlDocument(

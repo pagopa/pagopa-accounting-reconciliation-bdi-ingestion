@@ -33,7 +33,6 @@ import org.mockito.kotlin.spy
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.willReturn
-import org.mockito.kotlin.willThrow
 import org.springframework.core.io.InputStreamResource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -253,16 +252,14 @@ object P7mTestGenerator {
         val bos = ByteArrayOutputStream()
         val zos = ZipOutputStream(bos)
 
-        // Iniziamo un'entry valida
+        // Start with a valid entry
         zos.putNextEntry(ZipEntry("corrupted.xml"))
         zos.write("Inizio dati validi".toByteArray())
-        // NON CHIUDIAMO L'ENTRY CORRETTAMENTE (zos.closeEntry())
-        // OPPURE: Scriviamo byte a caso senza chiudere lo zip
-
-        // Forziamo la scrittura parziale
+        // Not close the entry (zos.closeEntry())
+        // And we for the partial write
         zos.flush()
 
-        // Prendiamo i byte grezzi (questo è un ZIP rotto, senza Central Directory finale)
+        // This zip will be broken without final Central Directory
         return bos.toByteArray()
     }
 

@@ -15,7 +15,6 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.test.assertTrue
 import org.assertj.core.api.Assertions.assertThat
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
@@ -82,7 +81,7 @@ class ReactiveP7mZipServiceTest {
     }
 
     @Test
-    fun `should process the zip file and return an error if P7M is a Detached Signature (no content inside)`() {
+    fun `should process the zip file and return an error if P7M is a Detached Signature (no content inside) but not stop the service`() {
 
         val files = mapOf("test.xml" to "<root>content</root>")
         val zipFile = P7mTestGenerator.createP7mWithZip(files, encapsulate = false)
@@ -95,17 +94,14 @@ class ReactiveP7mZipServiceTest {
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
-            .expectErrorSatisfies { error ->
-                assertTrue { error.javaClass == IllegalArgumentException::class.java }
-                assertTrue { error.message == "No content found in P7M" }
-            }
-            .verify()
+            .expectNext(Unit)
+            .verifyComplete()
 
         verify(bdiClient, times(1)).getAccountingFile("test_file")
     }
 
     @Test
-    fun `extractAndMap should fail if input is not a P7M file`() {
+    fun `the service should not stop if input is not a P7M file`() {
         // pre-requisites
         val inputStream = ByteArrayInputStream("test".toByteArray())
         val resource = InputStreamResource(inputStream)
@@ -116,8 +112,8 @@ class ReactiveP7mZipServiceTest {
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
-            .expectError()
-            .verify()
+            .expectNext(Unit)
+            .verifyComplete()
 
         verify(bdiClient, times(1)).getAccountingFile("test_file")
     }
@@ -253,21 +249,7 @@ object P7mTestGenerator {
     }
 
     fun createTrunkedZip(files: Map<String, String>): ByteArray {
-        //        val stream = ByteArrayOutputStream()
-        //        ZipOutputStream(stream).use { zos ->
-        //            files.forEach { (name, content) ->
-        //                val entry = ZipEntry(name)
-        //                zos.putNextEntry(entry)
-        //
-        //                if (!name.endsWith("/")) {
-        //                    zos.write(content.toByteArray(StandardCharsets.UTF_8))
-        //                }
-        //                // Don't close the entry and force a flush
-        //                zos.flush()
-        //            }
-        //        }
-        //
-        //        return stream.toByteArray()
+
         val bos = ByteArrayOutputStream()
         val zos = ZipOutputStream(bos)
 

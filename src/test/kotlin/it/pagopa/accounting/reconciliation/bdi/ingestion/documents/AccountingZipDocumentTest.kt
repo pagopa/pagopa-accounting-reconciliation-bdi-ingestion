@@ -48,12 +48,7 @@ class AccountingZipDocumentTest {
         val doc2 =
             AccountingZipDocument(id = "1", filename = "file.zip", uploadedAt = now, status = "OK")
         val doc3 =
-            AccountingZipDocument(
-                id = "2",
-                filename = "file.zip",
-                uploadedAt = now,
-                status = "OK",
-            )
+            AccountingZipDocument(id = "2", filename = "file.zip", uploadedAt = now, status = "OK")
 
         assertThat(doc1).isEqualTo(doc2)
         assertThat(doc1.hashCode()).isEqualTo(doc2.hashCode())

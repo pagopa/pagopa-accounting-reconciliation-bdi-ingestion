@@ -65,10 +65,10 @@ class XmlParserServiceTest {
 
         // verifications
         assertThat(capturedValue).isNotNull
-        assertThat(capturedValue.end2endId).isEqualTo("TEST-END2END-ID")
-        assertThat(capturedValue.causale).isEqualTo("Payment 001")
-        assertThat(capturedValue.bancaOrdinante).isEqualTo("Test Bank")
-        assertThat(capturedValue.importo).isEqualByComparingTo(BigDecimal("10.50"))
+        assertThat(capturedValue.END2END_ID).isEqualTo("TEST-END2END-ID")
+        assertThat(capturedValue.CAUSALE).isEqualTo("Payment 001")
+        assertThat(capturedValue.BANCA_ORDINANTE).isEqualTo("Test Bank")
+        assertThat(capturedValue.IMPORTO).isEqualByComparingTo(BigDecimal("10.50"))
     }
 
     @Test
@@ -110,10 +110,10 @@ class XmlParserServiceTest {
         val capturedValue = captor.firstValue
 
         // verifications
-        assertThat(capturedValue.end2endId).isEqualTo("TEST-END2END-ID")
-        assertThat(capturedValue.importo).isEqualByComparingTo(BigDecimal("10.50"))
-        assertThat(capturedValue.causale).isNull()
-        assertThat(capturedValue.bancaOrdinante).isNull()
+        assertThat(capturedValue.END2END_ID).isEqualTo("TEST-END2END-ID")
+        assertThat(capturedValue.IMPORTO).isEqualByComparingTo(BigDecimal("10.50"))
+        assertThat(capturedValue.CAUSALE).isNull()
+        assertThat(capturedValue.BANCA_ORDINANTE).isNull()
     }
 
     @Test
@@ -156,10 +156,10 @@ class XmlParserServiceTest {
         val capturedValue = captor.firstValue
 
         // verifications
-        assertThat(capturedValue.end2endId).isEqualTo("TEST-END2END-ID")
-        assertThat(capturedValue.importo).isNull()
-        assertThat(capturedValue.causale).isNull()
-        assertThat(capturedValue.bancaOrdinante).isNull()
+        assertThat(capturedValue.END2END_ID).isEqualTo("TEST-END2END-ID")
+        assertThat(capturedValue.IMPORTO).isNull()
+        assertThat(capturedValue.CAUSALE).isNull()
+        assertThat(capturedValue.BANCA_ORDINANTE).isNull()
     }
 
     @Test
@@ -198,10 +198,10 @@ class XmlParserServiceTest {
         val capturedValue = captor.firstValue
 
         // verifications
-        assertThat(capturedValue.end2endId).isNull()
-        assertThat(capturedValue.importo).isNull()
-        assertThat(capturedValue.causale).isNull()
-        assertThat(capturedValue.bancaOrdinante).isNull()
+        assertThat(capturedValue.END2END_ID).isNull()
+        assertThat(capturedValue.IMPORTO).isNull()
+        assertThat(capturedValue.CAUSALE).isNull()
+        assertThat(capturedValue.BANCA_ORDINANTE).isNull()
     }
 
     @Test

@@ -8,5 +8,8 @@ import org.springframework.test.context.TestPropertySource
 @TestPropertySource(locations = ["classpath:application.test.properties"])
 class ApplicationTests {
 
-    @Test fun contextLoads() {}
+    @Test
+    fun contextLoads() {
+        assert(true)
+    }
 }

@@ -50,6 +50,7 @@ dependencyManagement {
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
   implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
@@ -62,6 +63,12 @@ dependencies {
   )
   implementation("org.bouncycastle:bcpkix-jdk18on:${Dependencies.bouncyCastleVersion}")
   implementation("com.microsoft.azure.kusto:kusto-ingest:${Dependencies.kustoIngest}")
+
+  // Fix the SSL/HTTP2 problem for Mac Apple Silicon
+  runtimeOnly("io.netty:netty-tcnative-boringssl-static::osx-aarch_64")
+
+  // Fix DNS error for Mac Apple Silicon
+  runtimeOnly("io.netty:netty-resolver-dns-native-macos::osx-aarch_64")
 
   // tests
   testImplementation("org.mockito.kotlin:mockito-kotlin:${Dependencies.mockitoVersion}")

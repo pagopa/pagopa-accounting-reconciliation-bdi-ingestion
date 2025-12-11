@@ -76,6 +76,17 @@ see [docs](https://www.mongodb.com/docs/drivers/java/sync/v4.3/fundamentals/conn
 docker compose up --build
 ```
 
+### MongoDB
+
+You can access the MongoDB database using either [Mongo Express](https://github.com/mongo-express/mongo-express) or
+[MongoDB Compass](https://www.mongodb.com/products/tools/compass)
+
+#### Mongo Express
+
+Go to `http://localhost:8201` and use the following credentials:
+- Username: `admin`
+- Password: `pass`
+
 ---
 
 ## Develop Locally 💻

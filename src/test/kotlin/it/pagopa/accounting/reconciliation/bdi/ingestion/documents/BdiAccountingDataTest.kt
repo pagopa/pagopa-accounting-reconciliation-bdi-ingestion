@@ -21,7 +21,7 @@ class BdiAccountingDataTest {
                 causale = causale,
                 importo = importo,
                 bancaOrdinante = banca,
-                insertTimestamp = Instant.now(),
+                insertedTimestamp = Instant.now(),
             )
 
         assertThat(data.end2endId).isEqualTo(e2eId)
@@ -39,7 +39,7 @@ class BdiAccountingDataTest {
                 causale = null,
                 importo = null,
                 bancaOrdinante = null,
-                insertTimestamp = Instant.now(),
+                insertedTimestamp = Instant.now(),
             )
 
         assertThat(data.end2endId).isNull()
@@ -58,7 +58,7 @@ class BdiAccountingDataTest {
                 "Causale A",
                 importo,
                 "Banca A",
-                insertTimestamp = Instant.now(),
+                insertedTimestamp = Instant.now(),
             )
         val data2 =
             BdiAccountingData(
@@ -66,7 +66,7 @@ class BdiAccountingDataTest {
                 "Causale A",
                 importo,
                 "Banca A",
-                insertTimestamp = Instant.now(),
+                insertedTimestamp = Instant.now(),
             )
         val data3 =
             BdiAccountingData(
@@ -74,7 +74,7 @@ class BdiAccountingDataTest {
                 "Causale B",
                 BigDecimal("50.00"),
                 "Banca B",
-                insertTimestamp = Instant.now(),
+                insertedTimestamp = Instant.now(),
             )
 
         assertThat(data1.end2endId).isEqualTo(data2.end2endId)
@@ -85,9 +85,9 @@ class BdiAccountingDataTest {
     fun `should verify BigDecimal equality edge case`() {
 
         val dataScale0 =
-            BdiAccountingData("ID", "C", BigDecimal("10"), "B", insertTimestamp = Instant.now())
+            BdiAccountingData("ID", "C", BigDecimal("10"), "B", insertedTimestamp = Instant.now())
         val dataScale2 =
-            BdiAccountingData("ID", "C", BigDecimal("10.00"), "B", insertTimestamp = Instant.now())
+            BdiAccountingData("ID", "C", BigDecimal("10.00"), "B", insertedTimestamp = Instant.now())
 
         assertThat(dataScale0).isNotEqualTo(dataScale2)
     }
@@ -101,7 +101,7 @@ class BdiAccountingDataTest {
                 causale = "Old Causale",
                 importo = BigDecimal("10.00"),
                 bancaOrdinante = "Old Bank",
-                insertTimestamp = Instant.now(),
+                insertedTimestamp = Instant.now(),
             )
 
         val modified = original.copy(importo = BigDecimal("99.99"))
@@ -121,7 +121,7 @@ class BdiAccountingDataTest {
                 "Test",
                 BigDecimal("1.0"),
                 "MyBank",
-                insertTimestamp = Instant.now(),
+                insertedTimestamp = Instant.now(),
             )
 
         assertThat(data.toString())

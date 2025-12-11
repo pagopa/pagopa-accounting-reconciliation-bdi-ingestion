@@ -11,5 +11,5 @@ data class BdiAccountingData(
     val causale: String?,
     val importo: BigDecimal?,
     val bancaOrdinante: String?,
-    val insertTimestamp: Instant,
+    val insertedTimestamp: Instant,
 )

@@ -1,6 +1,7 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.microsoft.azure.kusto.ingest.IngestClient
 import com.microsoft.azure.kusto.ingest.IngestionProperties
 import com.microsoft.azure.kusto.ingest.source.StreamSourceInfo
@@ -19,9 +20,14 @@ class IngestionService(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    // Create a copy of the objectMapper, but it can handle the Instant kotlin class
+    private val ingestionMapper: ObjectMapper by lazy {
+        objectMapper.copy().registerModule(JavaTimeModule())
+    }
+
     fun <T : Any> ingestElement(element: T): Mono<Unit> {
         return Mono.fromCallable {
-                val jsonPayload = objectMapper.writeValueAsString(element)
+                val jsonPayload = ingestionMapper.writeValueAsString(element)
                 val inputStream = ByteArrayInputStream(jsonPayload.toByteArray())
 
                 val ingestionProperties = IngestionProperties(database, table)

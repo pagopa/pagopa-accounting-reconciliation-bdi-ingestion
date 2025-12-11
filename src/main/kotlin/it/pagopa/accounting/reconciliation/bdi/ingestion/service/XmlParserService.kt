@@ -7,6 +7,7 @@ import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXml
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccountingData
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.OpiRendAnalitico
 import java.io.InputStream
+import java.time.Instant
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -43,7 +44,7 @@ class XmlParserService(private val ingestionService: IngestionService) {
                 val bancaOrdinante =
                     opiRendAnalitico.movimento?.dettaglioMovimento?.entrata?.bancaOrdinante
 
-                BdiAccountingData(end2endId, causale, importo, bancaOrdinante)
+                BdiAccountingData(end2endId, causale, importo, bancaOrdinante, Instant.now())
             }
             .flatMap({ ingestionService.ingestElement(it) })
             // TODO: update xml table

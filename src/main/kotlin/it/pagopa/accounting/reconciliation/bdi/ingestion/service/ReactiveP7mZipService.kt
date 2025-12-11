@@ -2,7 +2,11 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlDocument
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlStatus
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipDocument
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipStatus
+import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingXmlRepository
+import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingZipRepository
 import java.io.BufferedInputStream
 import java.io.InputStream
 import java.security.Security
@@ -22,6 +26,8 @@ import reactor.core.scheduler.Schedulers
 class ReactiveP7mZipService(
     private val bdiClient: BdiClient,
     private val xmlParserService: XmlParserService,
+    private val zipRepository: AccountingZipRepository,
+    private val xmlRepository: AccountingXmlRepository,
     @Value("\${accounting-data-ingestion-job.concurrency_parsing}")
     private val parsingServiceConcurrency: Int,
 ) {
@@ -36,15 +42,22 @@ class ReactiveP7mZipService(
         return bdiClient
             .getAccountingFile(accountingZipDocument.filename)
             .flatMapMany { resource ->
-                decryptSignedStream(resource.inputStream).onErrorResume { e ->
-                    logger.error(
-                        "Error decrypting/unzipping file ${accountingZipDocument.filename}: ${e.message}"
-                    )
-                    Flux.empty()
+                decryptSignedStream(accountingZipDocument.filename, resource.inputStream)
+                    .onErrorResume { e ->
+                        logger.error(
+                            "Error decrypting/unzipping file ${accountingZipDocument.filename}: ${e.message}"
+                        )
+                        Flux.empty()
+                    }
+            }
+            .flatMap { xmlDocument ->
+                xmlRepository.save(xmlDocument).flatMap { savedXml ->
+                    val updatedZipDocument =
+                        accountingZipDocument.copy(status = AccountingZipStatus.DOWNLOADED)
+                    // Update ZIP file status
+                    zipRepository.save(updatedZipDocument).thenReturn(savedXml)
                 }
             }
-            // TODO: write on xml table
-            // TODO: update zip table
             .flatMap(
                 {
                     xmlParserService.processXmlFile(it).onErrorResume { e ->
@@ -58,7 +71,10 @@ class ReactiveP7mZipService(
             .thenReturn(Unit)
     }
 
-    private fun decryptSignedStream(p7mZipInputStream: InputStream): Flux<AccountingXmlDocument> {
+    private fun decryptSignedStream(
+        zipFilename: String,
+        p7mZipInputStream: InputStream,
+    ): Flux<AccountingXmlDocument> {
         return Flux.create { sink ->
                 try {
                     // P7M Unwrapping
@@ -72,7 +88,7 @@ class ReactiveP7mZipService(
                                 ?: throw IllegalArgumentException("No content found in P7M")
 
                         signedContent.contentStream.use { rawCmsStream ->
-                            processZipEntries(rawCmsStream, sink)
+                            processZipEntries(zipFilename, rawCmsStream, sink)
                         }
                         // Drain the parser (Required to prevent EOFException)
                         cmsParser.signerInfos
@@ -86,6 +102,7 @@ class ReactiveP7mZipService(
     }
 
     private fun processZipEntries(
+        zipFilename: String,
         decryptedStream: InputStream,
         sink: FluxSink<AccountingXmlDocument>,
     ) {
@@ -99,10 +116,10 @@ class ReactiveP7mZipService(
                             val contentString = String(bytes, Charsets.UTF_8)
                             val accountingXmlDocument =
                                 AccountingXmlDocument(
-                                    zipFilename = "",
+                                    zipFilename = zipFilename,
                                     filename = entry.name,
                                     xmlContent = contentString,
-                                    status = "", // TODO: set status
+                                    status = AccountingXmlStatus.TO_PARSE,
                                 )
                             sink.next(accountingXmlDocument)
                         } catch (e: Exception) {

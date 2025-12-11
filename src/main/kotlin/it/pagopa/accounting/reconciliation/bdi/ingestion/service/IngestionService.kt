@@ -28,7 +28,7 @@ class IngestionService(
     fun <T : Any> ingestElement(element: T): Mono<Unit> {
         return Mono.fromCallable {
                 val jsonPayload = ingestionMapper.writeValueAsString(element)
-                logger.info("${jsonPayload}")
+
                 val inputStream = ByteArrayInputStream(jsonPayload.toByteArray())
 
                 val ingestionProperties = IngestionProperties(database, table)

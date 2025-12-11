@@ -87,7 +87,13 @@ class BdiAccountingDataTest {
         val dataScale0 =
             BdiAccountingData("ID", "C", BigDecimal("10"), "B", insertedTimestamp = Instant.now())
         val dataScale2 =
-            BdiAccountingData("ID", "C", BigDecimal("10.00"), "B", insertedTimestamp = Instant.now())
+            BdiAccountingData(
+                "ID",
+                "C",
+                BigDecimal("10.00"),
+                "B",
+                insertedTimestamp = Instant.now(),
+            )
 
         assertThat(dataScale0).isNotEqualTo(dataScale2)
     }

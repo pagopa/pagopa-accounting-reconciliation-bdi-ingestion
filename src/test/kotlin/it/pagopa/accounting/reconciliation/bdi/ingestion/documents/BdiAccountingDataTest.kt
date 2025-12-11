@@ -17,17 +17,17 @@ class BdiAccountingDataTest {
 
         val data =
             BdiAccountingData(
-                END2END_ID = e2eId,
-                CAUSALE = causale,
-                IMPORTO = importo,
-                BANCA_ORDINANTE = banca,
-                INSERT_TIMESTAMP = Instant.now(),
+                end2endId = e2eId,
+                causale = causale,
+                importo = importo,
+                bancaOrdinante = banca,
+                insertTimestamp = Instant.now(),
             )
 
-        assertThat(data.END2END_ID).isEqualTo(e2eId)
-        assertThat(data.CAUSALE).isEqualTo(causale)
-        assertThat(data.IMPORTO).isEqualTo(importo)
-        assertThat(data.BANCA_ORDINANTE).isEqualTo(banca)
+        assertThat(data.end2endId).isEqualTo(e2eId)
+        assertThat(data.causale).isEqualTo(causale)
+        assertThat(data.importo).isEqualTo(importo)
+        assertThat(data.bancaOrdinante).isEqualTo(banca)
     }
 
     @Test
@@ -35,17 +35,17 @@ class BdiAccountingDataTest {
 
         val data =
             BdiAccountingData(
-                END2END_ID = null,
-                CAUSALE = null,
-                IMPORTO = null,
-                BANCA_ORDINANTE = null,
-                INSERT_TIMESTAMP = Instant.now(),
+                end2endId = null,
+                causale = null,
+                importo = null,
+                bancaOrdinante = null,
+                insertTimestamp = Instant.now(),
             )
 
-        assertThat(data.END2END_ID).isNull()
-        assertThat(data.CAUSALE).isNull()
-        assertThat(data.IMPORTO).isNull()
-        assertThat(data.BANCA_ORDINANTE).isNull()
+        assertThat(data.end2endId).isNull()
+        assertThat(data.causale).isNull()
+        assertThat(data.importo).isNull()
+        assertThat(data.bancaOrdinante).isNull()
     }
 
     @Test
@@ -58,7 +58,7 @@ class BdiAccountingDataTest {
                 "Causale A",
                 importo,
                 "Banca A",
-                INSERT_TIMESTAMP = Instant.now(),
+                insertTimestamp = Instant.now(),
             )
         val data2 =
             BdiAccountingData(
@@ -66,7 +66,7 @@ class BdiAccountingDataTest {
                 "Causale A",
                 importo,
                 "Banca A",
-                INSERT_TIMESTAMP = Instant.now(),
+                insertTimestamp = Instant.now(),
             )
         val data3 =
             BdiAccountingData(
@@ -74,10 +74,10 @@ class BdiAccountingDataTest {
                 "Causale B",
                 BigDecimal("50.00"),
                 "Banca B",
-                INSERT_TIMESTAMP = Instant.now(),
+                insertTimestamp = Instant.now(),
             )
 
-        assertThat(data1.END2END_ID).isEqualTo(data2.END2END_ID)
+        assertThat(data1.end2endId).isEqualTo(data2.end2endId)
         assertThat(data1).isNotEqualTo(data3)
     }
 
@@ -85,9 +85,9 @@ class BdiAccountingDataTest {
     fun `should verify BigDecimal equality edge case`() {
 
         val dataScale0 =
-            BdiAccountingData("ID", "C", BigDecimal("10"), "B", INSERT_TIMESTAMP = Instant.now())
+            BdiAccountingData("ID", "C", BigDecimal("10"), "B", insertTimestamp = Instant.now())
         val dataScale2 =
-            BdiAccountingData("ID", "C", BigDecimal("10.00"), "B", INSERT_TIMESTAMP = Instant.now())
+            BdiAccountingData("ID", "C", BigDecimal("10.00"), "B", insertTimestamp = Instant.now())
 
         assertThat(dataScale0).isNotEqualTo(dataScale2)
     }
@@ -97,20 +97,20 @@ class BdiAccountingDataTest {
 
         val original =
             BdiAccountingData(
-                END2END_ID = "OLD_ID",
-                CAUSALE = "Old Causale",
-                IMPORTO = BigDecimal("10.00"),
-                BANCA_ORDINANTE = "Old Bank",
-                INSERT_TIMESTAMP = Instant.now(),
+                end2endId = "OLD_ID",
+                causale = "Old Causale",
+                importo = BigDecimal("10.00"),
+                bancaOrdinante = "Old Bank",
+                insertTimestamp = Instant.now(),
             )
 
-        val modified = original.copy(IMPORTO = BigDecimal("99.99"))
+        val modified = original.copy(importo = BigDecimal("99.99"))
 
-        assertThat(modified.IMPORTO).isEqualTo(BigDecimal("99.99"))
+        assertThat(modified.importo).isEqualTo(BigDecimal("99.99"))
 
-        assertThat(modified.END2END_ID).isEqualTo("OLD_ID")
-        assertThat(modified.CAUSALE).isEqualTo("Old Causale")
-        assertThat(modified.BANCA_ORDINANTE).isEqualTo("Old Bank")
+        assertThat(modified.end2endId).isEqualTo("OLD_ID")
+        assertThat(modified.causale).isEqualTo("Old Causale")
+        assertThat(modified.bancaOrdinante).isEqualTo("Old Bank")
     }
 
     @Test
@@ -121,7 +121,7 @@ class BdiAccountingDataTest {
                 "Test",
                 BigDecimal("1.0"),
                 "MyBank",
-                INSERT_TIMESTAMP = Instant.now(),
+                insertTimestamp = Instant.now(),
             )
 
         assertThat(data.toString())

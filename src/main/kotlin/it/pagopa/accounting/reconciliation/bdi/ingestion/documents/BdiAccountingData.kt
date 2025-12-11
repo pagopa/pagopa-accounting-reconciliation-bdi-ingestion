@@ -1,12 +1,15 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.documents
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import java.math.BigDecimal
 import java.time.Instant
 
+@JsonNaming(PropertyNamingStrategies.UpperSnakeCaseStrategy::class)
 data class BdiAccountingData(
-    val END2END_ID: String?,
-    val CAUSALE: String?,
-    val IMPORTO: BigDecimal?,
-    val BANCA_ORDINANTE: String?,
-    val INSERT_TIMESTAMP: Instant,
+    val end2endId: String?,
+    val causale: String?,
+    val importo: BigDecimal?,
+    val bancaOrdinante: String?,
+    val insertTimestamp: Instant,
 )

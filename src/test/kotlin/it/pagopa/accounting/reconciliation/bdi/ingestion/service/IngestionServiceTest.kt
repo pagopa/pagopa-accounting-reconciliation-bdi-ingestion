@@ -1,12 +1,16 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.microsoft.azure.kusto.ingest.IngestClient
 import com.microsoft.azure.kusto.ingest.IngestionProperties
 import com.microsoft.azure.kusto.ingest.result.IngestionResult
 import com.microsoft.azure.kusto.ingest.source.StreamSourceInfo
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccountingData
 import java.io.InputStream
+import java.math.BigDecimal
 import java.nio.charset.StandardCharsets
+import java.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
@@ -18,7 +22,7 @@ import reactor.test.StepVerifier
 class IngestionServiceTest {
 
     private val ingestClient: IngestClient = mock()
-    private val objectMapper: ObjectMapper = mock()
+    private val objectMapper: ObjectMapper = ObjectMapper().registerModule(JavaTimeModule())
     private val ingestionResult: IngestionResult = mock()
 
     private val databaseName = "test-db"
@@ -31,10 +35,16 @@ class IngestionServiceTest {
     fun `ingestDataStream should batch data and send newline delimited JSON to ADX`() {
         // pre-requisites
         val data1 = TestData("item1")
-        val data2 = TestData("item2")
 
-        given(objectMapper.writeValueAsString(data1)).willReturn("""{"id":"item1"}""")
-        given(objectMapper.writeValueAsString(data2)).willReturn("""{"id":"item2"}""")
+        val bdiAccountingData =
+            BdiAccountingData(
+                "test_end2end",
+                "test_causale",
+                BigDecimal(10),
+                "test_banca",
+                Instant.now(),
+            )
+
         given(ingestClient.ingestFromStream(any(), any())).willReturn(ingestionResult)
 
         val sourceInfoCaptor = ArgumentCaptor.forClass(StreamSourceInfo::class.java)
@@ -63,6 +73,10 @@ class IngestionServiceTest {
         val expectedPayload = """{"id":"item1"}"""
 
         assertEquals(expectedPayload, content)
+
+        StepVerifier.create(ingestionService.ingestElement(bdiAccountingData))
+            .expectNext(Unit)
+            .verifyComplete()
     }
 
     @Test
@@ -71,11 +85,15 @@ class IngestionServiceTest {
         val data = TestData("error-item")
         val stream = Flux.just(data)
 
-        given(objectMapper.writeValueAsString(data))
+        val objectMapperMock: ObjectMapper = mock()
+        val ingestionServiceFail =
+            IngestionService(ingestClient, objectMapperMock, databaseName, tableName)
+
+        given(objectMapperMock.writeValueAsString(data))
             .willThrow(RuntimeException("Serialization error"))
 
         // test
-        StepVerifier.create(ingestionService.ingestElement(stream))
+        StepVerifier.create(ingestionServiceFail.ingestElement(stream))
             .expectError(RuntimeException::class.java)
             .verify()
 

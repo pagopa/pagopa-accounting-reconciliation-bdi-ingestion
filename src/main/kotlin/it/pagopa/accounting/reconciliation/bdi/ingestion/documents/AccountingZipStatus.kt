@@ -5,4 +5,3 @@ enum class AccountingZipStatus() {
     TO_DOWNLOAD,
     DOWNLOADED,
 }
-

@@ -51,6 +51,9 @@ class XmlParserService(
             }
             .flatMap { ingestionService.ingestElement(it) }
             .flatMap { _ ->
+                logger.info(
+                    "XML ${accountingXmlDocument.filename} processing completed. Updating status to PARSED."
+                )
                 val updatedXmlDocument =
                     accountingXmlDocument.copy(status = AccountingXmlStatus.PARSED)
                 // Update XML file status

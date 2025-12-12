@@ -38,6 +38,7 @@ class IngestionService(
                 val sourceInfo = StreamSourceInfo(inputStream)
                 ingestClient.ingestFromStream(sourceInfo, ingestionProperties)
             }
+            .doOnSuccess { logger.info("Element $element sent to ingestion queue") }
             .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
             .map {}
     }

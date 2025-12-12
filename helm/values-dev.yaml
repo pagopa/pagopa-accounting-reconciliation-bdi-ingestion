@@ -111,6 +111,7 @@ microservice-chart:
     MONGO_REPLICA_SET_OPTION: "&replicaSet=globaldb"
   envSecret:
     BDI_CERTIFICATE: bdi-accounting-reconciliation-platform-pagopa-it
+    MONGO_PASSWORD: mongo-qi-password
   keyvault:
     name: "pagopa-d-qi-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"

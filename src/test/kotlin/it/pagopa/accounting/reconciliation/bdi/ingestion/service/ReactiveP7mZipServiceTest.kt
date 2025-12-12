@@ -146,13 +146,6 @@ class ReactiveP7mZipServiceTest {
 
     @Test
     fun `processZipEntries should not stop service if the zip file is corrupted`() {
-        val files =
-            mapOf(
-                "test_1.xml" to "Test 1",
-                "test_2.xml" to "",
-                "test.txt" to "This should be ignored",
-                "directory/" to "",
-            )
         val zipFile = P7mTestGenerator.createP7mWithCorruptedZip()
         val resource = InputStreamResource(zipFile)
 
@@ -327,31 +320,5 @@ object P7mTestGenerator {
         val signedData = gen.generate(processable, encapsulate)
 
         return signedData.encoded
-    }
-
-    // This InputStream throw an error after someone read from it
-    class BrokenInputStream(val validZipBytes: ByteArray) : InputStream() {
-        val wrapped = ByteArrayInputStream(validZipBytes)
-        var count = 0
-
-        override fun read(): Int {
-            val b = wrapped.read()
-            checkPoison()
-            return b
-        }
-
-        override fun read(b: ByteArray, off: Int, len: Int): Int {
-            val read = wrapped.read(b, off, len)
-            checkPoison()
-            return read
-        }
-
-        fun checkPoison() {
-            count++
-            // throw an error after you read from it
-            if (count > 0) {
-                throw RuntimeException("Disk Failure Simulation")
-            }
-        }
     }
 }

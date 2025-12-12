@@ -5,6 +5,7 @@ import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXml
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlStatus
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipDocument
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipStatus
+import it.pagopa.accounting.reconciliation.bdi.ingestion.exceptions.AccountingZipFileProcessingException
 import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingXmlRepository
 import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingZipRepository
 import java.io.BufferedInputStream
@@ -38,36 +39,41 @@ class ReactiveP7mZipService(
     }
 
     fun processZipFile(accountingZipDocument: AccountingZipDocument): Mono<Unit> {
-        logger.info("Processing ZIP file: ${accountingZipDocument.filename}")
+        val filename = accountingZipDocument.filename
+        logger.info("Processing ZIP file: $filename")
         return bdiClient
-            .getAccountingFile(accountingZipDocument.filename)
+            .getAccountingFile(filename)
             .flatMapMany { resource ->
-                decryptSignedStream(accountingZipDocument.filename, resource.inputStream)
-                    .onErrorResume { e ->
-                        logger.error(
-                            "Error decrypting/unzipping file ${accountingZipDocument.filename}: ${e.message}"
+                decryptSignedStream(filename, resource.inputStream).onErrorResume {
+                    Mono.error {
+                        AccountingZipFileProcessingException(
+                            "Error decrypting/unzipping file $filename: ${it.message}",
+                            it,
                         )
-                        Flux.empty()
                     }
-            }
-            .flatMap { xmlDocument ->
-                xmlRepository.save(xmlDocument).flatMap { savedXml ->
-                    val updatedZipDocument =
-                        accountingZipDocument.copy(status = AccountingZipStatus.DOWNLOADED)
-                    // Update ZIP file status
-                    zipRepository.save(updatedZipDocument).thenReturn(savedXml)
                 }
             }
             .flatMap(
-                {
-                    xmlParserService.processXmlFile(it).onErrorResume { e ->
-                        logger.error("Error processing XML entry ${it.filename}: ${e.message}")
-                        Mono.empty()
+                { xmlDocument ->
+                    xmlRepository.save(xmlDocument).flatMap {
+                        xmlParserService.processXmlFile(it).onErrorResume { e ->
+                            logger.error("Error processing XML entry ${it.filename}: ${e.message}")
+                            Mono.empty()
+                        }
                     }
                 },
                 parsingServiceConcurrency,
             )
-            .then()
+            .then(
+                Mono.defer {
+                    logger.info(
+                        "ZIP $filename processing completed. Updating status to DOWNLOADED."
+                    )
+                    val updatedZipDocument =
+                        accountingZipDocument.copy(status = AccountingZipStatus.DOWNLOADED)
+                    zipRepository.save(updatedZipDocument)
+                }
+            )
             .thenReturn(Unit)
     }
 

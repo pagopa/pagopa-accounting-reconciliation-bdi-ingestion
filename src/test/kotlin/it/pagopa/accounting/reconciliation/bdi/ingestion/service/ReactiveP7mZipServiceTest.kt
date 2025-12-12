@@ -4,6 +4,7 @@ import it.pagopa.accounting.reconciliation.bdi.ingestion.TestUtils
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlDocument
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipDocument
+import it.pagopa.accounting.reconciliation.bdi.ingestion.exceptions.AccountingZipFileProcessingException
 import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingXmlRepository
 import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingZipRepository
 import java.io.ByteArrayInputStream
@@ -93,7 +94,7 @@ class ReactiveP7mZipServiceTest {
     }
 
     @Test
-    fun `should process the zip file and return an error if P7M is a Detached Signature (no content inside) but not stop the service`() {
+    fun `should process the zip file and return an error if P7M is a Detached Signature (no content inside)`() {
 
         val files = mapOf("test.xml" to "<root>content</root>")
         val zipFile = P7mTestGenerator.createP7mWithZip(files, encapsulate = false)
@@ -113,14 +114,14 @@ class ReactiveP7mZipServiceTest {
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
-            .expectNext(Unit)
-            .verifyComplete()
+            .expectError(AccountingZipFileProcessingException::class.java)
+            .verify()
 
         verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
     }
 
     @Test
-    fun `the service should not stop if input is not a P7M file`() {
+    fun `the service should throw AccountingZipFileProcessingException if input is not a P7M file`() {
         // pre-requisites
         val inputStream = ByteArrayInputStream("test".toByteArray())
         val resource = InputStreamResource(inputStream)
@@ -138,14 +139,14 @@ class ReactiveP7mZipServiceTest {
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
-            .expectNext(Unit)
-            .verifyComplete()
+            .expectError(AccountingZipFileProcessingException::class.java)
+            .verify()
 
         verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
     }
 
     @Test
-    fun `processZipEntries should not stop service if the zip file is corrupted`() {
+    fun `processZipEntries should throw AccountingZipFileProcessingException if the zip file is corrupted`() {
         val zipFile = P7mTestGenerator.createP7mWithCorruptedZip()
         val resource = InputStreamResource(zipFile)
 
@@ -163,8 +164,8 @@ class ReactiveP7mZipServiceTest {
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
-            .expectNext(Unit)
-            .verifyComplete()
+            .expectError(AccountingZipFileProcessingException::class.java)
+            .verify()
 
         verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
     }
@@ -253,9 +254,7 @@ object P7mTestGenerator {
         return ByteArrayInputStream(p7mBytes)
     }
 
-    fun createP7mWithCorruptedZip(
-        encapsulate: Boolean = true,
-    ): InputStream {
+    fun createP7mWithCorruptedZip(encapsulate: Boolean = true): InputStream {
         val zipBytes = createTrunkedZip()
         val p7mBytes = signData(zipBytes, encapsulate)
         return ByteArrayInputStream(p7mBytes)

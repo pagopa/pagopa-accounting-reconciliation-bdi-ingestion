@@ -153,7 +153,7 @@ class ReactiveP7mZipServiceTest {
                 "test.txt" to "This should be ignored",
                 "directory/" to "",
             )
-        val zipFile = P7mTestGenerator.createP7mWithCorruptedZip(files)
+        val zipFile = P7mTestGenerator.createP7mWithCorruptedZip()
         val resource = InputStreamResource(zipFile)
 
         val accountingZipDocument = TestUtils.accountingZipDocument()
@@ -260,20 +260,10 @@ object P7mTestGenerator {
         return ByteArrayInputStream(p7mBytes)
     }
 
-    fun createP7mWithCorruptedInputStream(
-        files: Map<String, String>,
-        encapsulate: Boolean = true,
-    ): InputStream {
-        val zipBytes = createZip(files)
-        val p7mBytes = signData(zipBytes, encapsulate)
-        return BrokenInputStream(p7mBytes)
-    }
-
     fun createP7mWithCorruptedZip(
-        files: Map<String, String>,
         encapsulate: Boolean = true,
     ): InputStream {
-        val zipBytes = createTrunkedZip(files)
+        val zipBytes = createTrunkedZip()
         val p7mBytes = signData(zipBytes, encapsulate)
         return ByteArrayInputStream(p7mBytes)
     }
@@ -295,7 +285,7 @@ object P7mTestGenerator {
         return stream.toByteArray()
     }
 
-    fun createTrunkedZip(files: Map<String, String>): ByteArray {
+    fun createTrunkedZip(): ByteArray {
         val bos = ByteArrayOutputStream()
         val zos = ZipOutputStream(bos)
 

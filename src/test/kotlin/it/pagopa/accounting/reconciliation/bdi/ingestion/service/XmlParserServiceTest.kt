@@ -199,8 +199,6 @@ class XmlParserServiceTest {
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
 
-        val captor = argumentCaptor<BdiAccountingData>()
-
         // test
         StepVerifier.create(xmlParserService.processXmlFile(accountingXmlDocument))
             .expectSubscription()

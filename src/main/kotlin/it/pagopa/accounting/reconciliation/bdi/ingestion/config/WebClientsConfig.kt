@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
+import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.Connection
 import reactor.netty.http.client.HttpClient
@@ -26,6 +27,7 @@ class WebClientsConfig(val env: Environment) {
         @Value("\${bdi.server.uri}") serverUri: String,
         @Value("\${bdi.server.readTimeoutMillis}") readTimeoutMillis: Int,
         @Value("\${bdi.server.connectionTimeoutMillis}") connectionTimeoutMillis: Int,
+        @Value("\${bdi.server.maxInMemorySize:10048576}") maxInMemorySize: Int,
         sslBundles: SslBundles,
     ): WebClient {
         // Create the bundle spring from the name defined into the application properties for the
@@ -41,6 +43,13 @@ class WebClientsConfig(val env: Environment) {
             sslContextBuilder.trustManager(InsecureTrustManagerFactory.INSTANCE)
 
         val sslContext = sslContextBuilder.build()
+
+        val exchangeStrategies =
+            ExchangeStrategies.builder()
+                .codecs { configurer ->
+                    configurer.defaultCodecs().maxInMemorySize(maxInMemorySize)
+                }
+                .build()
 
         val httpClient =
             HttpClient.create()
@@ -59,6 +68,7 @@ class WebClientsConfig(val env: Environment) {
         return BdiApiClient.buildWebClientBuilder()
             .clientConnector(ReactorClientHttpConnector(httpClient))
             .baseUrl(serverUri)
+            .exchangeStrategies(exchangeStrategies)
             .build()
     }
 

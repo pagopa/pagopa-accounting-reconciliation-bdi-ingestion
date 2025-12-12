@@ -1,7 +1,11 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 
+import it.pagopa.accounting.reconciliation.bdi.ingestion.TestUtils
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlDocument
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipDocument
+import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingXmlRepository
+import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingZipRepository
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -9,7 +13,6 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.KeyPairGenerator
 import java.security.Security
-import java.time.Instant
 import java.util.Date
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -40,7 +43,10 @@ import reactor.test.StepVerifier
 class ReactiveP7mZipServiceTest {
     private val bdiClient: BdiClient = mock()
     private val xmlParserService: XmlParserService = mock()
-    private val reactiveP7mZipService = ReactiveP7mZipService(bdiClient, xmlParserService, 1)
+    private val zipRepository: AccountingZipRepository = mock()
+    private val xmlRepository: AccountingXmlRepository = mock()
+    private val reactiveP7mZipService =
+        ReactiveP7mZipService(bdiClient, xmlParserService, zipRepository, xmlRepository, 1)
 
     companion object {
         @JvmStatic
@@ -65,17 +71,24 @@ class ReactiveP7mZipServiceTest {
         val zipFile = P7mTestGenerator.createP7mWithZip(files)
         val resource = InputStreamResource(zipFile)
 
-        val accountingZipDocument =
-            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+        val accountingZipDocument = TestUtils.accountingZipDocument()
 
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
         given(xmlParserService.processXmlFile(any())).willReturn { Mono.just(Unit) }
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
             .expectNext(Unit)
             .verifyComplete()
 
-        verify(bdiClient, times(1)).getAccountingFile("test_file")
+        verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
         verify(xmlParserService, times(2)).processXmlFile(any())
     }
 
@@ -87,16 +100,23 @@ class ReactiveP7mZipServiceTest {
 
         val resource = InputStreamResource(zipFile)
 
-        val accountingZipDocument =
-            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+        val accountingZipDocument = TestUtils.accountingZipDocument()
 
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
             .expectNext(Unit)
             .verifyComplete()
 
-        verify(bdiClient, times(1)).getAccountingFile("test_file")
+        verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
     }
 
     @Test
@@ -105,16 +125,23 @@ class ReactiveP7mZipServiceTest {
         val inputStream = ByteArrayInputStream("test".toByteArray())
         val resource = InputStreamResource(inputStream)
 
-        val accountingZipDocument =
-            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+        val accountingZipDocument = TestUtils.accountingZipDocument()
 
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
             .expectNext(Unit)
             .verifyComplete()
 
-        verify(bdiClient, times(1)).getAccountingFile("test_file")
+        verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
     }
 
     @Test
@@ -129,17 +156,24 @@ class ReactiveP7mZipServiceTest {
         val zipFile = P7mTestGenerator.createP7mWithCorruptedZip(files)
         val resource = InputStreamResource(zipFile)
 
-        val accountingZipDocument =
-            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+        val accountingZipDocument = TestUtils.accountingZipDocument()
 
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
         given(xmlParserService.processXmlFile(any())).willReturn { Mono.just(Unit) }
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
             .expectNext(Unit)
             .verifyComplete()
 
-        verify(bdiClient, times(1)).getAccountingFile("test_file")
+        verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
     }
 
     @Test
@@ -154,18 +188,25 @@ class ReactiveP7mZipServiceTest {
         val zipFile = P7mTestGenerator.createP7mWithZip(files)
         val resource = InputStreamResource(zipFile)
 
-        val accountingZipDocument =
-            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+        val accountingZipDocument = TestUtils.accountingZipDocument()
 
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
         given(xmlParserService.processXmlFile(any()))
             .willReturn(Mono.error(RuntimeException("Serialization error")))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
             .expectNext(Unit)
             .verifyComplete()
 
-        verify(bdiClient, times(1)).getAccountingFile("test_file")
+        verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
         // Should be called 2 times because 2 files are good and because the service doesn't stop to
         // work after the first Exception
         verify(xmlParserService, times(2)).processXmlFile(any())
@@ -185,19 +226,26 @@ class ReactiveP7mZipServiceTest {
         val spyStream = spy(zipFile)
         val resource = InputStreamResource(spyStream)
 
-        val accountingZipDocument =
-            AccountingZipDocument("test_id", "test_file", Instant.now(), "test_status")
+        val accountingZipDocument = TestUtils.accountingZipDocument()
 
         given(bdiClient.getAccountingFile(any())).willReturn { Mono.just(resource) }
 
         given(xmlParserService.processXmlFile(any()))
             .willThrow(RuntimeException("STOP PROCESSING!"))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
             .expectErrorSatisfies { e -> assertThat(e.message).isEqualTo("STOP PROCESSING!") }
             .verify()
 
-        verify(bdiClient, times(1)).getAccountingFile("test_file")
+        verify(bdiClient, times(1)).getAccountingFile(accountingZipDocument.filename)
         // Varify that only one file is unzipped then only the parsing is called only one time
         verify(xmlParserService, times(1)).processXmlFile(any())
     }
@@ -248,15 +296,12 @@ object P7mTestGenerator {
     }
 
     fun createTrunkedZip(files: Map<String, String>): ByteArray {
-
         val bos = ByteArrayOutputStream()
         val zos = ZipOutputStream(bos)
 
         // Start with a valid entry
         zos.putNextEntry(ZipEntry("corrupted.xml"))
-        zos.write("Inizio dati validi".toByteArray())
-        // Not close the entry (zos.closeEntry())
-        // And we for the partial write
+        zos.write("Start valid data".toByteArray())
         zos.flush()
 
         // This zip will be broken without final Central Directory

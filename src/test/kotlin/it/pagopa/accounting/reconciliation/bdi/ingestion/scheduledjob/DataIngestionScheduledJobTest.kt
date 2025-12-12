@@ -3,6 +3,7 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.scheduledjob
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipDocument
 import it.pagopa.accounting.reconciliation.bdi.ingestion.exceptions.AccountingFilesNotRetrievedException
+import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingZipRepository
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.ReactiveP7mZipService
 import it.pagopa.generated.bdi.model.FileMetadataDto
 import it.pagopa.generated.bdi.model.ListAccountingFiles200ResponseDto
@@ -22,6 +23,7 @@ class DataIngestionScheduledJobTest {
 
     private val bdiClient: BdiClient = mock()
     private val reactiveP7mZipService: ReactiveP7mZipService = mock()
+    private val zipRepository: AccountingZipRepository = mock()
     private val retries: Long = 2
     private val minBackoffSeconds: Long = 5
     private val zipServiceConcurrency: Int = 1
@@ -29,6 +31,7 @@ class DataIngestionScheduledJobTest {
         DataIngestionScheduledJob(
             bdiClient,
             reactiveP7mZipService,
+            zipRepository,
             retries,
             minBackoffSeconds,
             zipServiceConcurrency,
@@ -47,6 +50,11 @@ class DataIngestionScheduledJobTest {
         // pre-requisites
         given(bdiClient.getAvailableAccountingFiles()).willReturn(Mono.just(listAccountingFiles))
         given(reactiveP7mZipService.processZipFile(any())).willReturn(Mono.just(Unit))
+        given(zipRepository.existsByFilename(any())).willReturn(Mono.just(false))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         // test
         StepVerifier.create(dataIngestionScheduledJob.accountingDataIngestion())
@@ -101,6 +109,11 @@ class DataIngestionScheduledJobTest {
         // pre-requisites
         given(bdiClient.getAvailableAccountingFiles()).willReturn(Mono.just(listAccountingFiles))
         given(reactiveP7mZipService.processZipFile(any())).willReturn(Mono.just(Unit))
+        given(zipRepository.existsByFilename(any())).willReturn(Mono.just(false))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         // test
         StepVerifier.create(dataIngestionScheduledJob.accountingDataIngestion())
@@ -140,6 +153,11 @@ class DataIngestionScheduledJobTest {
         // pre-requisites
         given(bdiClient.getAvailableAccountingFiles()).willReturn(Mono.just(listAccountingFiles))
         given(reactiveP7mZipService.processZipFile(any())).willReturn(Mono.just(Unit))
+        given(zipRepository.existsByFilename(any())).willReturn(Mono.just(false))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         // test
         StepVerifier.create(dataIngestionScheduledJob.accountingDataIngestion())
@@ -179,6 +197,11 @@ class DataIngestionScheduledJobTest {
         // pre-requisites
         given(bdiClient.getAvailableAccountingFiles()).willReturn(Mono.just(listAccountingFiles))
         given(reactiveP7mZipService.processZipFile(any())).willReturn(Mono.just(Unit))
+        given(zipRepository.existsByFilename(any())).willReturn(Mono.just(false))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         // test
         StepVerifier.create(dataIngestionScheduledJob.accountingDataIngestion())
@@ -218,6 +241,11 @@ class DataIngestionScheduledJobTest {
         // pre-requisites
         given(bdiClient.getAvailableAccountingFiles()).willReturn(Mono.just(listAccountingFiles))
         given(reactiveP7mZipService.processZipFile(any())).willReturn(Mono.just(Unit))
+        given(zipRepository.existsByFilename(any())).willReturn(Mono.just(false))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         // test
         StepVerifier.create(dataIngestionScheduledJob.accountingDataIngestion())
@@ -257,6 +285,11 @@ class DataIngestionScheduledJobTest {
         // pre-requisites
         given(bdiClient.getAvailableAccountingFiles()).willReturn(Mono.just(listAccountingFiles))
         given(reactiveP7mZipService.processZipFile(any())).willReturn(Mono.just(Unit))
+        given(zipRepository.existsByFilename(any())).willReturn(Mono.just(false))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         // test
         StepVerifier.create(dataIngestionScheduledJob.accountingDataIngestion())
@@ -296,6 +329,11 @@ class DataIngestionScheduledJobTest {
         // pre-requisites
         given(bdiClient.getAvailableAccountingFiles()).willReturn(Mono.just(listAccountingFiles))
         given(reactiveP7mZipService.processZipFile(any())).willReturn(Mono.just(Unit))
+        given(zipRepository.existsByFilename(any())).willReturn(Mono.just(false))
+        given(zipRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         // test
         StepVerifier.create(dataIngestionScheduledJob.accountingDataIngestion())

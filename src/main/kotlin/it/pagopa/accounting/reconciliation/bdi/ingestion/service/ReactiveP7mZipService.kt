@@ -9,12 +9,12 @@ import it.pagopa.accounting.reconciliation.bdi.ingestion.exceptions.AccountingZi
 import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingXmlRepository
 import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingZipRepository
 import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.security.Security
 import java.util.zip.ZipInputStream
-import org.bouncycastle.cms.CMSSignedDataParser
+import org.bouncycastle.cms.CMSSignedData
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -40,7 +40,7 @@ class ReactiveP7mZipService(
 
     fun processZipFile(accountingZipDocument: AccountingZipDocument): Mono<Unit> {
         val filename = accountingZipDocument.filename
-        logger.info("Processing ZIP file: $filename")
+        logger.debug("Processing ZIP file: $filename")
         return bdiClient
             .getAccountingFile(filename)
             .flatMapMany { resource ->
@@ -55,12 +55,13 @@ class ReactiveP7mZipService(
             }
             .flatMap(
                 { xmlDocument ->
-                    xmlRepository.save(xmlDocument).flatMap {
-                        xmlParserService.processXmlFile(it).onErrorResume { e ->
-                            logger.error("Error processing XML entry ${it.filename}: ${e.message}")
+                    xmlRepository
+                        .save(xmlDocument)
+                        .flatMap { xmlParserService.processXmlFile(it) }
+                        .onErrorResume { e ->
+                            logger.error("Error processing XML entry ${filename}: ${e.message}")
                             Mono.empty()
                         }
-                    }
                 },
                 parsingServiceConcurrency,
             )
@@ -85,19 +86,25 @@ class ReactiveP7mZipService(
                 try {
                     // P7M Unwrapping
                     BufferedInputStream(p7mZipInputStream).use { bufferedIn ->
-                        val digestProvider =
-                            JcaDigestCalculatorProviderBuilder().setProvider("BC").build()
-                        val cmsParser = CMSSignedDataParser(digestProvider, bufferedIn)
+                        val cmsData = CMSSignedData(bufferedIn)
 
                         val signedContent =
-                            cmsParser.signedContent
+                            cmsData.signedContent
                                 ?: throw IllegalArgumentException("No content found in P7M")
 
-                        signedContent.contentStream.use { rawCmsStream ->
+                        val contentStream: InputStream =
+                            when (val contentObject = signedContent.content) {
+                                is ByteArray -> ByteArrayInputStream(contentObject)
+                                is InputStream -> contentObject
+                                else ->
+                                    error(
+                                        "Unexpected content type: ${contentObject?.javaClass?.name}"
+                                    )
+                            }
+
+                        contentStream.use { rawCmsStream ->
                             processZipEntries(zipFilename, rawCmsStream, sink)
                         }
-                        // Drain the parser (Required to prevent EOFException)
-                        cmsParser.signerInfos
                     }
                     sink.complete()
                 } catch (e: Exception) {

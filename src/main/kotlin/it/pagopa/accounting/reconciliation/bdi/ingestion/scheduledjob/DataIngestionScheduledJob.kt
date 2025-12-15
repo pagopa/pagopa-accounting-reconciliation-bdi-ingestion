@@ -52,7 +52,15 @@ class DataIngestionScheduledJob(
                     }
             )
             .doOnComplete { logger.info("Retrieved BDI accounting file list successfully.") }
-            .flatMap({ reactiveP7mZipService.processZipFile(it) }, zipServiceConcurrency)
+            .flatMap(
+                {
+                    reactiveP7mZipService.processZipFile(it).onErrorResume { error ->
+                        logger.error("Error during ZIP processing", error)
+                        Mono.empty()
+                    }
+                },
+                zipServiceConcurrency,
+            )
             .then()
     }
 

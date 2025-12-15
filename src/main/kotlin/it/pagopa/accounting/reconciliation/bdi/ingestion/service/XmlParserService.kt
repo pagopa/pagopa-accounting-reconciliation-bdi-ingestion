@@ -34,7 +34,7 @@ class XmlParserService(
      */
     fun processXmlFile(accountingXmlDocument: AccountingXmlDocument): Mono<Unit> {
         return Mono.fromCallable {
-                logger.info("Processing XML file: ${accountingXmlDocument.filename}")
+                logger.debug("Processing XML file: ${accountingXmlDocument.filename}")
                 val opiRendAnalitico =
                     xmlMapper.readValue(
                         accountingXmlDocument.xmlContent,
@@ -51,7 +51,7 @@ class XmlParserService(
             }
             .flatMap { ingestionService.ingestElement(it) }
             .flatMap { _ ->
-                logger.info(
+                logger.debug(
                     "XML ${accountingXmlDocument.filename} processing completed. Updating status to PARSED."
                 )
                 val updatedXmlDocument =

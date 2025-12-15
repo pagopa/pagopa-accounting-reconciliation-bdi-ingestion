@@ -22,6 +22,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.FluxSink
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
+import java.time.Duration
 
 @Service
 class ReactiveP7mZipService(
@@ -53,10 +54,11 @@ class ReactiveP7mZipService(
                     }
                 }
             }
-            .buffer(50)
-            .flatMap { xmlBatch ->
+            .buffer(10)
+            .zipWith(Flux.interval(Duration.ofMillis(500)))
+            .flatMap { tuple ->
                 xmlRepository
-                    .saveAll(xmlBatch)
+                    .saveAll(tuple.t1)
                     .flatMap(
                         { savedXml ->
                             xmlParserService.processXmlFile(savedXml).onErrorResume { e ->

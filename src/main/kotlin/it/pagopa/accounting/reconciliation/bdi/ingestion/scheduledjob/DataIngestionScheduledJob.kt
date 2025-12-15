@@ -8,10 +8,12 @@ import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.Accounting
 import it.pagopa.accounting.reconciliation.bdi.ingestion.service.ReactiveP7mZipService
 import it.pagopa.generated.bdi.model.FileMetadataDto
 import java.time.Duration
+import java.util.stream.Collectors
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.extra.bool.not
 import reactor.util.retry.Retry
@@ -34,8 +36,25 @@ class DataIngestionScheduledJob(
         return bdiClient
             .getAvailableAccountingFiles()
             .doFirst { logger.info("Starting accounting data ingestion scheduled job") }
-            .flatMapIterable { it.files }
-            .filterWhen { shouldDownloadFile(it) }
+            .flatMapMany { response ->
+                val candidates = response.files.filter { it.isDownloadableCandidate }
+
+                if (candidates.isEmpty()) {
+                    return@flatMapMany Flux.empty()
+                }
+
+                val candidateNames = candidates.map { it.fileName }
+
+                zipRepository
+                    .findByFilenameIn(candidateNames)
+                    .map { it.filename }
+                    .collect(Collectors.toSet())
+                    .flatMapMany { existingFilenames ->
+                        Flux.fromIterable(candidates).filter { candidate ->
+                            !existingFilenames.contains(candidate.fileName)
+                        }
+                    }
+            }
             .flatMap { fileMetadataDto ->
                 logger.info("Saving ZIP filename: ${fileMetadataDto.fileName}")
                 val accountingZipDocument =
@@ -52,23 +71,8 @@ class DataIngestionScheduledJob(
                     }
             )
             .doOnComplete { logger.info("Retrieved BDI accounting file list successfully.") }
-            .flatMap(
-                {
-                    reactiveP7mZipService.processZipFile(it).onErrorResume { error ->
-                        logger.error("Error during ZIP processing", error)
-                        Mono.empty()
-                    }
-                },
-                zipServiceConcurrency,
-            )
+            .flatMap({ reactiveP7mZipService.processZipFile(it) }, zipServiceConcurrency)
             .then()
-    }
-
-    private fun shouldDownloadFile(file: FileMetadataDto): Mono<Boolean> {
-        if (!file.isDownloadableCandidate) {
-            return Mono.just(false)
-        }
-        return zipRepository.existsByFilename(file.fileName).map { !it }
     }
 
     private val FileMetadataDto.isDownloadableCandidate: Boolean

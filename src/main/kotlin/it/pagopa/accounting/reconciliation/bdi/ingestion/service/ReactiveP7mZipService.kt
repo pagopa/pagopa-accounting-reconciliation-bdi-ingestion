@@ -53,18 +53,22 @@ class ReactiveP7mZipService(
                     }
                 }
             }
-            .flatMap(
-                { xmlDocument ->
-                    xmlRepository
-                        .save(xmlDocument)
-                        .flatMap { xmlParserService.processXmlFile(it) }
-                        .onErrorResume { e ->
-                            logger.error("Error processing XML entry ${filename}: ${e.message}")
-                            Mono.empty()
-                        }
-                },
-                parsingServiceConcurrency,
-            )
+            .buffer(50)
+            .flatMap { xmlBatch ->
+                xmlRepository
+                    .saveAll(xmlBatch)
+                    .flatMap(
+                        { savedXml ->
+                            xmlParserService.processXmlFile(savedXml).onErrorResume { e ->
+                                logger.error(
+                                    "Error processing XML entry inside batch: ${e.message}"
+                                )
+                                Mono.empty()
+                            }
+                        },
+                        parsingServiceConcurrency,
+                    )
+            }
             .then(
                 Mono.defer {
                     logger.info(
@@ -75,6 +79,10 @@ class ReactiveP7mZipService(
                     zipRepository.save(updatedZipDocument)
                 }
             )
+            .onErrorResume { error ->
+                logger.error("Error during ZIP processing", error)
+                Mono.empty()
+            }
             .thenReturn(Unit)
     }
 

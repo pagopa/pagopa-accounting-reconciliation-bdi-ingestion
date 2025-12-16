@@ -46,7 +46,8 @@ class IngestionServiceTest {
                 Instant.now(),
             )
 
-        given(ingestClient.ingestFromStreamAsync(any(), any())).willReturn(Mono.just(ingestionResult))
+        given(ingestClient.ingestFromStreamAsync(any(), any()))
+            .willReturn(Mono.just(ingestionResult))
 
         val sourceInfoCaptor = ArgumentCaptor.forClass(StreamSourceInfo::class.java)
         val propsCaptor = ArgumentCaptor.forClass(IngestionProperties::class.java)

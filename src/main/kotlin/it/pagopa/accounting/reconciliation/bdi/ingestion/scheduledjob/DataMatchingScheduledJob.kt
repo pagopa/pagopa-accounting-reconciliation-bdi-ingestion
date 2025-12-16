@@ -33,6 +33,20 @@ class DataMatchingScheduledJob(
     fun matchingQuery(): Mono<Void> {
         logger.info("Starting Matching scheduled Job")
 
+        /*
+           This KQL query filter the bdiTable and the fdiTable base on the timeshift set,
+           then produce a `fullouter` join of the two table:
+           - In the first case the join use the END2END_ID and the ID_FLUSSO as key
+           - In the second case a new column is created using a regex for extract the END2END_ID from the CAUSALE,
+             named END2END_CAUSALE, and used as key with ID_FLUSSO in the join
+            In both the case a new column named DIFFERENZA_BDI_FDI_IMPORTO is added, containing the difference
+            between the IMPORTO (BDI data for the amount of the payment) and the SOMMA_VERSATA ( FDR data for the
+            amount of the payment registered in FLUSSO DI RENDICONTAZIONE).
+            This data is useful to understand if the two data match ( value == 0 ) or no ( value !== 0 ).
+            After that the two table produced with the join are unified and a `leftanti` join with the existing
+            matchingTable is done, for remove element already present, a new column with INSERTED_DATE is added and
+            the then append the result.
+        */
         val kqlCommand =
             """
             .set-or-append async $matchingTable <|
@@ -45,25 +59,33 @@ class DataMatchingScheduledJob(
             | project ID_FLUSSO, SOMMA_VERSATA;
         
             let matchEnd2EndId_IdFlusso = T1
-            | join kind=inner (T2) on ${'$'}left.END2END_ID == ${'$'}right.ID_FLUSSO
-            | project CAUSALE, END2END_ID, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
+            | where isnotempty(END2END_ID)
+            | join kind=fullouter (T2) on ${'$'}left.END2END_ID == ${'$'}right.ID_FLUSSO
+            | project CAUSALE, END2END_ID, ID_FLUSSO, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
             
             let matchCausale_IdFlusso = T1
             //| extend END2END_CAUSALE = extract(".*/(.*)", 1, CAUSALE)
             | extend END2END_CAUSALE = extract("$regexCausaleQuery", 1, CAUSALE)
             | where isnotempty(END2END_CAUSALE)
-            | join kind=inner (T2) on ${'$'}left.END2END_CAUSALE == ${'$'}right.ID_FLUSSO
-            | project CAUSALE, END2END_ID, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
+            | join kind=fullouter (T2) on ${'$'}left.END2END_CAUSALE == ${'$'}right.ID_FLUSSO
+            | project CAUSALE, END2END_ID, ID_FLUSSO, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
             
-            matchEnd2EndId_IdFlusso
+            let newData = matchEnd2EndId_IdFlusso
             | union matchCausale_IdFlusso
             // Remove duplication
             | distinct *
+            
+            // Get the existing data
+            let ExistingData = $matchingTable 
+            | project END2END_ID, ID_FLUSSO;
+            
+            newData
+            // The `leftanti` join exclude the existing data in the matching table to avoid duplication
+            | join kind=leftanti (ExistingData) on END2END_ID, ID_FLUSSO
             | extend INSERTED_DATE = now()
             | project-rename 
                 IMPORTO_BDI = IMPORTO,
-                IMPORTO_FDI = SOMMA_VERSATA
-            
+                IMPORTO_FDI = SOMMA_VERSATA    
             """
                 .trimIndent()
 

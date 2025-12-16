@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import org.mockito.kotlin.given
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
 class IngestionServiceTest {
@@ -45,7 +46,7 @@ class IngestionServiceTest {
                 Instant.now(),
             )
 
-        given(ingestClient.ingestFromStream(any(), any())).willReturn(ingestionResult)
+        given(ingestClient.ingestFromStreamAsync(any(), any())).willReturn(Mono.just(ingestionResult))
 
         val sourceInfoCaptor = ArgumentCaptor.forClass(StreamSourceInfo::class.java)
         val propsCaptor = ArgumentCaptor.forClass(IngestionProperties::class.java)
@@ -55,7 +56,7 @@ class IngestionServiceTest {
 
         // verifications
         verify(ingestClient, times(1))
-            .ingestFromStream(sourceInfoCaptor.capture(), propsCaptor.capture())
+            .ingestFromStreamAsync(sourceInfoCaptor.capture(), propsCaptor.capture())
 
         val capturedProps = propsCaptor.value
         assertEquals(databaseName, capturedProps.databaseName)

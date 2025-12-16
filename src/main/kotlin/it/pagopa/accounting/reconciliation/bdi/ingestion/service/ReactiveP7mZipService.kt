@@ -56,7 +56,7 @@ class ReactiveP7mZipService(
             }
             .buffer(10)
             .zipWith(Flux.interval(Duration.ofMillis(1000)).onBackpressureDrop())
-            .flatMap { tuple ->
+            .concatMap { tuple ->
                 xmlRepository
                     .saveAll(tuple.t1)
                     .flatMap(

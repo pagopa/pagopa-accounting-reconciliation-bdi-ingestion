@@ -12,7 +12,6 @@ import java.io.BufferedInputStream
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.security.Security
-import java.time.Duration
 import java.util.zip.ZipInputStream
 import org.bouncycastle.cms.CMSSignedData
 import org.bouncycastle.jce.provider.BouncyCastleProvider
@@ -57,10 +56,9 @@ class ReactiveP7mZipService(
                 }
             }
             .buffer(filesBufferSize)
-            .zipWith(Flux.interval(Duration.ofMillis(1000)).onBackpressureDrop())
-            .concatMap { tuple ->
+            .concatMap {
                 xmlRepository
-                    .saveAll(tuple.t1)
+                    .saveAll(it)
                     .flatMap(
                         { savedXml ->
                             xmlParserService.processXmlFile(savedXml).onErrorResume { e ->

@@ -51,11 +51,11 @@ class DataMatchingScheduledJob(
             """
             .set-or-append async $matchingTable <|
             let T1 = $bdiTable 
-            | where ingestion_time()  > ago(${bdiTimeshift}d) 
+            | where ingestion_time()  > ago(${bdiTimeshift}) 
             | project CAUSALE, END2END_ID, IMPORTO;
             
             let T2 = $fdiTable 
-            | where ingestion_time()  > ago(${fdiTimeshift}d) 
+            | where ingestion_time()  > ago(${fdiTimeshift}) 
             | project ID_FLUSSO, SOMMA_VERSATA;
         
             let matchEnd2EndId_IdFlusso = T1

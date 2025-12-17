@@ -15,7 +15,6 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.kotlin.extra.bool.not
 import reactor.util.retry.Retry
 
 @Service
@@ -29,6 +28,10 @@ class DataIngestionScheduledJob(
     @Value("\${accounting-data-ingestion-job.unzip.concurrency}")
     private val zipServiceConcurrency: Int,
 ) {
+    companion object {
+        val filenameRegex = ".*-OPI-REND-ANALITICO-BE-.*".toRegex()
+    }
+
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Scheduled(cron = "\${accounting-data-ingestion-job.execution.cron}")
@@ -76,5 +79,5 @@ class DataIngestionScheduledJob(
     }
 
     private val FileMetadataDto.isDownloadableCandidate: Boolean
-        get() = isRegularFile && !isDirectory && size > 0
+        get() = isRegularFile && !isDirectory && size > 0 && filenameRegex.matches(fileName)
 }

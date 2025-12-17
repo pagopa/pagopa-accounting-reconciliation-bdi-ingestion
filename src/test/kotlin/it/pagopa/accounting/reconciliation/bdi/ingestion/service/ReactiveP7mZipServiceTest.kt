@@ -47,7 +47,7 @@ class ReactiveP7mZipServiceTest {
     private val zipRepository: AccountingZipRepository = mock()
     private val xmlRepository: AccountingXmlRepository = mock()
     private val reactiveP7mZipService =
-        ReactiveP7mZipService(bdiClient, xmlParserService, zipRepository, xmlRepository, 1)
+        ReactiveP7mZipService(bdiClient, xmlParserService, zipRepository, xmlRepository, 1, 10)
 
     companion object {
         @JvmStatic

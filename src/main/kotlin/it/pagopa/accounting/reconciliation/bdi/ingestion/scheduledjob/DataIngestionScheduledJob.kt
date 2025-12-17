@@ -26,7 +26,7 @@ class DataIngestionScheduledJob(
     @Value("\${accounting-data-ingestion-job.retries}") private val retries: Long,
     @Value("\${accounting-data-ingestion-job.minBackoffSeconds}")
     private val minBackoffSeconds: Long,
-    @Value("\${accounting-data-ingestion-job.concurrency_unzip}")
+    @Value("\${accounting-data-ingestion-job.unzip.concurrency}")
     private val zipServiceConcurrency: Int,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)

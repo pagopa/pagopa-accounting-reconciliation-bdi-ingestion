@@ -30,8 +30,10 @@ class ReactiveP7mZipService(
     private val xmlParserService: XmlParserService,
     private val zipRepository: AccountingZipRepository,
     private val xmlRepository: AccountingXmlRepository,
-    @Value("\${accounting-data-ingestion-job.concurrency_parsing}")
+    @Value("\${accounting-data-ingestion-job.parsing.concurrency}")
     private val parsingServiceConcurrency: Int,
+    @Value("\${accounting-data-ingestion-job.unzip.files-buffer-size}")
+    private val filesBufferSize: Int,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -54,7 +56,7 @@ class ReactiveP7mZipService(
                     }
                 }
             }
-            .buffer(10)
+            .buffer(filesBufferSize)
             .zipWith(Flux.interval(Duration.ofMillis(1000)).onBackpressureDrop())
             .concatMap { tuple ->
                 xmlRepository

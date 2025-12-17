@@ -73,7 +73,7 @@ class DataMatchingScheduledJob(
             let newData = matchEnd2EndId_IdFlusso
             | union matchCausale_IdFlusso
             // Remove duplication
-            | distinct *
+            | distinct *;
             
             // Get the existing data
             let ExistingData = $matchingTable 

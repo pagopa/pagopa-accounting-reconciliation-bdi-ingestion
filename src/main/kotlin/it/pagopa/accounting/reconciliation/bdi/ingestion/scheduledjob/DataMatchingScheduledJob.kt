@@ -17,8 +17,8 @@ class DataMatchingScheduledJob(
     private val kustoClient: Client,
     @Value("\${matching-job.query.timeout}") private val timeout: Long,
     @Value("\${azuredataexplorer.database}") private val database: String,
-    @Value("\${matching-job.query.bdi.timeshift}") private val bdiTimeshift: Int,
-    @Value("\${matching-job.query.fdi.timeshift}") private val fdiTimeshift: Int,
+    @Value("\${matching-job.query.bdi.timeshift}") private val bdiTimeshift: String,
+    @Value("\${matching-job.query.fdi.timeshift}") private val fdiTimeshift: String,
     @Value("\${matching-job.database.table.bdi}") private val bdiTable: String,
     @Value("\${matching-job.database.table.fdi}") private val fdiTable: String,
     @Value("\${matching-job.database.table.matching}") private val matchingTable: String,
@@ -50,44 +50,50 @@ class DataMatchingScheduledJob(
         val kqlCommand =
             """
             .set-or-append async $matchingTable <|
-            let T1 = $bdiTable 
-            | where ingestion_time()  > ago(${bdiTimeshift}) 
-            | project CAUSALE, END2END_ID, IMPORTO;
+            let T1 = materialize(
+            $bdiTable 
+            | where ingestion_time()  > ago(${bdiTimeshift})
+            | where END2END_ID != "NOT PROVIDED"
+            | summarize arg_max(INSERTED_TIMESTAMP, *) by END2END_ID
+            | project CAUSALE, END2END_ID, IMPORTO);
             
-            let T2 = $fdiTable 
-            | where ingestion_time()  > ago(${fdiTimeshift}) 
-            | project ID_FLUSSO, SOMMA_VERSATA;
+            let T2 =  materialize( 
+            $fdiTable 
+            | where ingestion_time()  > ago(${fdiTimeshift})
+            | summarize arg_max(INSERTED_TIMESTAMP, *) by ID_FLUSSO
+            | project ID_FLUSSO, SOMMA_VERSATA);
         
             let matchEnd2EndId_IdFlusso = T1
             | where isnotempty(END2END_ID)
-            | join kind=fullouter (T2) on ${'$'}left.END2END_ID == ${'$'}right.ID_FLUSSO
+            | join kind=inner hint.strategy=shuffle (T2) on ${'$'}left.END2END_ID == ${'$'}right.ID_FLUSSO
             | project CAUSALE, END2END_ID, ID_FLUSSO, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
             
             let matchCausale_IdFlusso = T1
             //| extend END2END_CAUSALE = extract(".*/(.*)", 1, CAUSALE)
             | extend END2END_CAUSALE = extract("$regexCausaleQuery", 1, CAUSALE)
             | where isnotempty(END2END_CAUSALE)
-            | join kind=fullouter (T2) on ${'$'}left.END2END_CAUSALE == ${'$'}right.ID_FLUSSO
+            | join kind=inner hint.strategy=shuffle (T2) on ${'$'}left.END2END_CAUSALE == ${'$'}right.ID_FLUSSO
             | project CAUSALE, END2END_ID, ID_FLUSSO, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
             
             let newData = matchEnd2EndId_IdFlusso
             | union matchCausale_IdFlusso
             // Remove duplication
-            | distinct *;
-            
-            // Get the existing data
-            let ExistingData = $matchingTable 
-            | project END2END_ID, ID_FLUSSO;
+            | summarize take_any(*) by END2END_ID, ID_FLUSSO;
             
             newData
             // The `leftanti` join exclude the existing data in the matching table to avoid duplication
-            | join kind=leftanti (ExistingData) on END2END_ID, ID_FLUSSO
+            | join kind=leftanti hint.strategy=shuffle (
+                $matchingTable 
+                    | project END2END_ID, ID_FLUSSO
+            ) on END2END_ID, ID_FLUSSO
             | extend INSERTED_DATE = now()
             | project-rename 
                 IMPORTO_BDI = IMPORTO,
                 IMPORTO_FDI = SOMMA_VERSATA    
             """
                 .trimIndent()
+
+        logger.info(kqlCommand)
 
         val properties = ClientRequestProperties()
         properties.setTimeoutInMilliSec(TimeUnit.MINUTES.toMillis(timeout))

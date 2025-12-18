@@ -19,8 +19,8 @@ class DataMatchingScheduledJobTest {
     private val kustoClient: Client = mock()
     private val timeout: Long = 10
     private val database: String = "test"
-    private val bdiTimeshift: Int = 7
-    private val fdiTimeshift: Int = 7
+    private val bdiTimeshift: String = "7d"
+    private val fdiTimeshift: String = "7d"
     private val bdiTable: String = "bdiTable"
     private val fdiTable: String = "fdiTable"
     private val matchingTable: String = "matchingTable"
@@ -59,7 +59,7 @@ class DataMatchingScheduledJobTest {
     }
 
     @Test
-    fun `should fail the to call the client for execute the query, must retry and then call throw an Error`() {
+    fun `should fail to call the client for execute the query, must retry and then call throw an Error`() {
 
         val exception = Exception()
 

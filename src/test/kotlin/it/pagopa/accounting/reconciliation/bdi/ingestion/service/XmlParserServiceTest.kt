@@ -41,7 +41,7 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument = TestUtils.accountingXmlDocumentWithContent(xmlContent)
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = xmlContent)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
         given(xmlRepository.save(any())).willAnswer { invocation ->
@@ -83,7 +83,7 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument = TestUtils.accountingXmlDocumentWithContent(xmlContent)
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = xmlContent)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
         given(xmlRepository.save(any())).willAnswer { invocation ->
@@ -125,7 +125,7 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument = TestUtils.accountingXmlDocumentWithContent(xmlContent)
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = xmlContent)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
         given(xmlRepository.save(any())).willAnswer { invocation ->
@@ -163,7 +163,7 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument = TestUtils.accountingXmlDocumentWithContent(xmlContent)
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = xmlContent)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
         given(xmlRepository.save(any())).willAnswer { invocation ->
@@ -195,7 +195,7 @@ class XmlParserServiceTest {
         // pre-requisites
         val brokenXml = "<OPI_REND_ANALITICO><movimento>No Closing Tag"
 
-        val accountingXmlDocument = TestUtils.accountingXmlDocumentWithContent(brokenXml)
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = brokenXml)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
 

@@ -38,6 +38,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.willReturn
 import org.springframework.core.io.InputStreamResource
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
@@ -80,9 +81,10 @@ class ReactiveP7mZipServiceTest {
             val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
             Mono.just(entityToSave)
         }
-        given(xmlRepository.save(any())).willAnswer { invocation ->
-            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
-            Mono.just(entityToSave)
+        given(xmlRepository.saveAll(any<Iterable<AccountingXmlDocument>>())).willAnswer { invocation
+            ->
+            val entitiesToSave = invocation.getArgument<Iterable<AccountingXmlDocument>>(0)
+            Flux.fromIterable(entitiesToSave)
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
@@ -108,9 +110,10 @@ class ReactiveP7mZipServiceTest {
             val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
             Mono.just(entityToSave)
         }
-        given(xmlRepository.save(any())).willAnswer { invocation ->
-            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
-            Mono.just(entityToSave)
+        given(xmlRepository.saveAll(any<Iterable<AccountingXmlDocument>>())).willAnswer { invocation
+            ->
+            val entitiesToSave = invocation.getArgument<Iterable<AccountingXmlDocument>>(0)
+            Flux.fromIterable(entitiesToSave)
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
@@ -133,9 +136,10 @@ class ReactiveP7mZipServiceTest {
             val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
             Mono.just(entityToSave)
         }
-        given(xmlRepository.save(any())).willAnswer { invocation ->
-            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
-            Mono.just(entityToSave)
+        given(xmlRepository.saveAll(any<Iterable<AccountingXmlDocument>>())).willAnswer { invocation
+            ->
+            val entitiesToSave = invocation.getArgument<Iterable<AccountingXmlDocument>>(0)
+            Flux.fromIterable(entitiesToSave)
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
@@ -158,9 +162,10 @@ class ReactiveP7mZipServiceTest {
             val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
             Mono.just(entityToSave)
         }
-        given(xmlRepository.save(any())).willAnswer { invocation ->
-            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
-            Mono.just(entityToSave)
+        given(xmlRepository.saveAll(any<Iterable<AccountingXmlDocument>>())).willAnswer { invocation
+            ->
+            val entitiesToSave = invocation.getArgument<Iterable<AccountingXmlDocument>>(0)
+            Flux.fromIterable(entitiesToSave)
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
@@ -191,9 +196,10 @@ class ReactiveP7mZipServiceTest {
             val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
             Mono.just(entityToSave)
         }
-        given(xmlRepository.save(any())).willAnswer { invocation ->
-            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
-            Mono.just(entityToSave)
+        given(xmlRepository.saveAll(any<Iterable<AccountingXmlDocument>>())).willAnswer { invocation
+            ->
+            val entitiesToSave = invocation.getArgument<Iterable<AccountingXmlDocument>>(0)
+            Flux.fromIterable(entitiesToSave)
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))
@@ -230,9 +236,10 @@ class ReactiveP7mZipServiceTest {
             val entityToSave = invocation.getArgument<AccountingZipDocument>(0)
             Mono.just(entityToSave)
         }
-        given(xmlRepository.save(any())).willAnswer { invocation ->
-            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
-            Mono.just(entityToSave)
+        given(xmlRepository.saveAll(any<Iterable<AccountingXmlDocument>>())).willAnswer { invocation
+            ->
+            val entitiesToSave = invocation.getArgument<Iterable<AccountingXmlDocument>>(0)
+            Flux.fromIterable(entitiesToSave)
         }
 
         StepVerifier.create(reactiveP7mZipService.processZipFile(accountingZipDocument))

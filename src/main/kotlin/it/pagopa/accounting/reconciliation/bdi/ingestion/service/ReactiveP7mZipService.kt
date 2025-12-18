@@ -81,10 +81,6 @@ class ReactiveP7mZipService(
                     zipRepository.save(updatedZipDocument)
                 }
             )
-            .onErrorResume { error ->
-                logger.error("Error during ZIP processing", error)
-                Mono.empty()
-            }
             .thenReturn(Unit)
     }
 

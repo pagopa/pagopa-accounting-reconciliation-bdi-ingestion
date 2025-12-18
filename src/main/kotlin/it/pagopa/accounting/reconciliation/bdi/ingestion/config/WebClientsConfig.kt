@@ -27,7 +27,9 @@ class WebClientsConfig(val env: Environment) {
         @Value("\${bdi.server.uri}") serverUri: String,
         @Value("\${bdi.server.readTimeoutMillis}") readTimeoutMillis: Int,
         @Value("\${bdi.server.connectionTimeoutMillis}") connectionTimeoutMillis: Int,
-        @Value("\${bdi.server.maxInMemorySize:10048576}") maxInMemorySize: Int,
+        // Default size is 10MB (10.485.760 bytes). Increased from default 256KB to handle large
+        // files
+        @Value("\${bdi.server.maxInMemorySize:10485760}") maxInMemorySize: Int,
         sslBundles: SslBundles,
     ): WebClient {
         // Create the bundle spring from the name defined into the application properties for the

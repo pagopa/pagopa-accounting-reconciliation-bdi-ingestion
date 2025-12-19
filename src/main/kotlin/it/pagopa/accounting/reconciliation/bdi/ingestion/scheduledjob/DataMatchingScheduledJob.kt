@@ -106,8 +106,12 @@ class DataMatchingScheduledJob(
             )
             .doOnNext { it ->
                 logger.info("Matching job complete successfully.")
-                val rowsCount = it.primaryResults.count()
-                logger.info("Rows added: $rowsCount")
+                val table = it.primaryResults
+                table.next()
+                val rowsAffected = table.getLong("RowCount")
+                logger.info("Rows added: $rowsAffected")
+                val rowsCount = table.count()
+                logger.info("Rows count: $rowsCount.count()")
             }
             .then()
     }

@@ -48,14 +48,14 @@ class DataMatchingScheduledJobTest {
 
         var responseObj: KustoOperationResult = mock()
 
-        given(kustoClient.executeQueryAsync(any(), any(), any())).willReturn(Mono.just(responseObj))
+        given(kustoClient.executeMgmtAsync(any(), any(), any())).willReturn(Mono.just(responseObj))
 
         StepVerifier.create(dataMatchingScheduledJob.matchingQuery())
             .expectSubscription()
             .verifyComplete()
 
         // Verify that the kusto client is called only 1 time
-        verify(kustoClient, times(1)).executeQueryAsync(any(), any(), any())
+        verify(kustoClient, times(1)).executeMgmtAsync(any(), any(), any())
     }
 
     @Test
@@ -63,7 +63,7 @@ class DataMatchingScheduledJobTest {
 
         val exception = Exception()
 
-        given(kustoClient.executeQueryAsync(any(), any(), any())).willReturn(Mono.error(exception))
+        given(kustoClient.executeMgmtAsync(any(), any(), any())).willReturn(Mono.error(exception))
 
         StepVerifier.create(dataMatchingScheduledJob.matchingQuery())
             .expectSubscription()

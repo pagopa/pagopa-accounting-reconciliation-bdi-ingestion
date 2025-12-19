@@ -99,7 +99,7 @@ class DataMatchingScheduledJob(
         properties.setTimeoutInMilliSec(TimeUnit.MINUTES.toMillis(timeout))
 
         return kustoClient
-            .executeQueryAsync(database, kqlCommand, properties)
+            .executeMgmtAsync(database, kqlCommand, properties)
             .retryWhen(
                 Retry.backoff(retries, Duration.ofSeconds(minBackoffSeconds))
                     .onRetryExhaustedThrow { _, signal -> MatchingJobException(signal.failure()) }

@@ -104,7 +104,11 @@ class DataMatchingScheduledJob(
                 Retry.backoff(retries, Duration.ofSeconds(minBackoffSeconds))
                     .onRetryExhaustedThrow { _, signal -> MatchingJobException(signal.failure()) }
             )
-            .doOnNext { logger.info("Matching job complete successfully.") }
+            .doOnNext { it ->
+                logger.info("Matching job complete successfully.")
+                val rowsCount = it.primaryResults.count()
+                logger.info("Rows added: $rowsCount")
+            }
             .then()
     }
 }

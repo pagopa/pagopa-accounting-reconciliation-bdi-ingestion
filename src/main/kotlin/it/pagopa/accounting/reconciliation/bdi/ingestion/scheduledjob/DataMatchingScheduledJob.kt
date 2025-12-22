@@ -55,25 +55,25 @@ class DataMatchingScheduledJob(
             | where ingestion_time()  > ago(${bdiTimeshift})
             | where END2END_ID != "NOT PROVIDED"
             | summarize arg_max(INSERTED_TIMESTAMP, *) by END2END_ID
-            | project CAUSALE, END2END_ID, IMPORTO);
+            | project CAUSALE, END2END_ID, IMPORTO, BANCA_ORDINANTE);
             
             let T2 =  materialize( 
             $fdiTable 
             | where ingestion_time()  > ago(${fdiTimeshift})
             | summarize arg_max(INSERTED_TIMESTAMP, *) by ID_FLUSSO
-            | project ID_FLUSSO, SOMMA_VERSATA);
+            | project ID_FLUSSO, SOMMA_VERSATA, ID_DOMINIO, PSP);
         
             let matchEnd2EndId_IdFlusso = T1
             | where isnotempty(END2END_ID)
             | join kind=inner hint.strategy=shuffle (T2) on ${'$'}left.END2END_ID == ${'$'}right.ID_FLUSSO
-            | project CAUSALE, END2END_ID, ID_FLUSSO, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
+            | project CAUSALE, END2END_ID, ID_FLUSSO, BANCA_ORDINANTE, ID_DOMINIO, PSP, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
             
             let matchCausale_IdFlusso = T1
             //| extend END2END_CAUSALE = extract(".*/(.*)", 1, CAUSALE)
             | extend END2END_CAUSALE = extract("$regexCausaleQuery", 1, CAUSALE)
             | where isnotempty(END2END_CAUSALE)
             | join kind=inner hint.strategy=shuffle (T2) on ${'$'}left.END2END_CAUSALE == ${'$'}right.ID_FLUSSO
-            | project CAUSALE, END2END_ID, ID_FLUSSO, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
+            | project CAUSALE, END2END_ID, ID_FLUSSO, BANCA_ORDINANTE, ID_DOMINIO, PSP, IMPORTO, SOMMA_VERSATA, DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
             
             let newData = matchEnd2EndId_IdFlusso
             | union matchCausale_IdFlusso

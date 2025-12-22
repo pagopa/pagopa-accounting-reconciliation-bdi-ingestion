@@ -10,14 +10,14 @@ microservice-chart:
     httpGet:
       path: /actuator/health/liveness
       port: 8080
-    initialDelaySeconds: 60
+    initialDelaySeconds: 80
     failureThreshold: 6
     periodSeconds: 10
   readinessProbe:
     httpGet:
       path: /actuator/health/readiness
       port: 8080
-    initialDelaySeconds: 60
+    initialDelaySeconds: 80
     failureThreshold: 6
     periodSeconds: 10
   deployment:
@@ -72,12 +72,12 @@ microservice-chart:
     ROOT_LOGGING_LEVEL: "info"
     APP_LOGGING_LEVEL: "info"
     WEB_LOGGING_LEVEL: "info"
-    NETTY_TCP_SSL_PROVIDER_LOGGING_LEVEL: "debug"
-    NETTY_HANDLER_SSL_LOGGING_LEVEL: "debug"
+    NETTY_TCP_SSL_PROVIDER_LOGGING_LEVEL: "info"
+    NETTY_HANDLER_SSL_LOGGING_LEVEL: "info"
     OTEL_SERVICE_NAME: "pagopa-accounting-reconciliation-bdi-ingestion"
     OTEL_SERVICE_ENVIRONMENT: "uat"
     OTEL_RESOURCE_ATTRIBUTES: "deployment.environment=uat"
-    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.otel.svc:4317"
+    OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.elastic-system.svc:4317"
     OTEL_EXPORTER_OTLP_PROTOCOL: grpc
     OTEL_TRACES_EXPORTER: otlp
     OTEL_METRICS_EXPORTER: otlp
@@ -89,15 +89,30 @@ microservice-chart:
     ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 12 * * *"
     ACCOUNTING_DATA_INGESTION_JOB_RETRIES: "3"
     ACCOUNTING_DATA_INGESTION_JOB_MIN_BACKOFF_SECONDS: "5"
-    ACCOUNTING_DATA_INGESTION_JOB_UNZIP_CONCURRENCY: "5"
-    ACCOUNTING_DATA_INGESTION_JOB_PARSING_CONCURRENCY: "1"
+    ACCOUNTING_DATA_INGESTION_JOB_UNZIP_CONCURRENCY: "2"
+    ACCOUNTING_DATA_INGESTION_JOB_UNZIP_FILES_BUFFER_SIZE: "10"
+    ACCOUNTING_DATA_INGESTION_JOB_PARSING_CONCURRENCY: "5"
     BDI_CERTIFICATE_PATH: /mnt/secrets-store/bdi-accounting-reconciliation-platform-pagopa-it
     AZURE_DATA_EXPLORER_DOMAIN: pagopaudataexplorer.westeurope.kusto.windows.net
     AZURE_DATA_EXPLORER_DATABASE: re
     AZURE_DATA_EXPLORER_DATABASE_TABLE: ACCOUNTING_DATA_BDI
+    MONGO_HOST: pagopa-u-weu-qi-cosmos-account.mongo.cosmos.azure.com
+    MONGO_USERNAME: pagopa-u-weu-qi-cosmos-account
+    MONGO_PORT: "10255"
+    MONGO_SSL_ENABLED: "true"
+    MONGO_DB_NAME: "accounting-reconciliation"
+    MONGO_MIN_POOL_SIZE: "0"
+    MONGO_MAX_POOL_SIZE: "50"
+    MONGO_MAX_IDLE_TIMEOUT_MS: "600000"
+    MONGO_CONNECTION_TIMEOUT_MS: "2000"
+    MONGO_SOCKET_TIMEOUT_MS: "10000"
+    MONGO_SERVER_SELECTION_TIMEOUT_MS: "2000"
+    MONGO_WAITING_QUEUE_MS: "2000"
+    MONGO_HEARTBEAT_FREQUENCY_MS: "5000"
+    MONGO_REPLICA_SET_OPTION: "&replicaSet=globaldb"
   envSecret:
-    OTEL_EXPORTER_OTLP_HEADERS: elastic-otel-token-header
     BDI_CERTIFICATE: bdi-accounting-reconciliation-platform-pagopa-it
+    MONGO_PASSWORD: mongo-qi-password
   keyvault:
     name: "pagopa-u-qi-kv"
     tenantId: "7788edaf-0346-4068-9d79-c868aed15b3d"

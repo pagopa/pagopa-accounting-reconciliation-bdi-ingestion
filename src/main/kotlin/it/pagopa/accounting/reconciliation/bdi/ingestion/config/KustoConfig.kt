@@ -16,24 +16,25 @@ class KustoConfig(@Value("\${azuredataexplorer.domain}") private val domain: Str
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Bean
-    fun reKustoClient(): QueuedIngestClient {
-        logger.info("Initializing RE Kusto Ingest client")
-        val kcsb =
+    fun kustoIngestClient(): QueuedIngestClient {
+        logger.info("Initializing Kusto Ingest client")
+
+        return IngestClientFactory.createClient(
             ConnectionStringBuilder.createWithTokenCredential(
                 "https://ingest-$domain",
                 DefaultAzureCredentialBuilder().build(),
             )
-        return IngestClientFactory.createClient(kcsb)
+        )
     }
 
     @Bean
-    fun reKustoQueryClient(): Client {
-        logger.info("Initializing RE Kusto Query client")
-        val kcsb =
+    fun kustoQueryClient(): Client {
+        logger.info("Initializing Kusto Query client")
+        return ClientFactory.createClient(
             ConnectionStringBuilder.createWithTokenCredential(
                 "https://$domain",
                 DefaultAzureCredentialBuilder().build(),
             )
-        return ClientFactory.createClient(kcsb)
+        )
     }
 }

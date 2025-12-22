@@ -2,14 +2,19 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 
 import it.pagopa.accounting.reconciliation.bdi.ingestion.clients.BdiClient
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlDocument
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlStatus
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipDocument
+import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingZipStatus
+import it.pagopa.accounting.reconciliation.bdi.ingestion.exceptions.AccountingZipFileProcessingException
+import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingXmlRepository
+import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingZipRepository
 import java.io.BufferedInputStream
+import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.security.Security
 import java.util.zip.ZipInputStream
-import org.bouncycastle.cms.CMSSignedDataParser
+import org.bouncycastle.cms.CMSSignedData
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -22,8 +27,12 @@ import reactor.core.scheduler.Schedulers
 class ReactiveP7mZipService(
     private val bdiClient: BdiClient,
     private val xmlParserService: XmlParserService,
-    @Value("\${accounting-data-ingestion-job.concurrency_parsing}")
+    private val zipRepository: AccountingZipRepository,
+    private val xmlRepository: AccountingXmlRepository,
+    @Value("\${accounting-data-ingestion-job.parsing.concurrency}")
     private val parsingServiceConcurrency: Int,
+    @Value("\${accounting-data-ingestion-job.unzip.files-buffer-size}")
+    private val filesBufferSize: Int,
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -32,50 +41,76 @@ class ReactiveP7mZipService(
     }
 
     fun processZipFile(accountingZipDocument: AccountingZipDocument): Mono<Unit> {
-        logger.info("Processing ZIP file: ${accountingZipDocument.filename}")
+        val filename = accountingZipDocument.filename
+        logger.debug("Processing ZIP file: $filename")
         return bdiClient
-            .getAccountingFile(accountingZipDocument.filename)
+            .getAccountingFile(filename)
             .flatMapMany { resource ->
-                decryptSignedStream(resource.inputStream).onErrorResume { e ->
-                    logger.error(
-                        "Error decrypting/unzipping file ${accountingZipDocument.filename}: ${e.message}"
-                    )
-                    Flux.empty()
+                decryptSignedStream(filename, resource.inputStream).onErrorResume {
+                    Mono.error {
+                        AccountingZipFileProcessingException(
+                            "Error decrypting/unzipping file $filename: ${it.message}",
+                            it,
+                        )
+                    }
                 }
             }
-            // TODO: write on xml table
-            // TODO: update zip table
-            .flatMap(
-                {
-                    xmlParserService.processXmlFile(it).onErrorResume { e ->
-                        logger.error("Error processing XML entry ${it.filename}: ${e.message}")
-                        Mono.empty()
-                    }
-                },
-                parsingServiceConcurrency,
+            .buffer(filesBufferSize)
+            .concatMap {
+                xmlRepository
+                    .saveAll(it)
+                    .flatMap(
+                        { savedXml ->
+                            xmlParserService.processXmlFile(savedXml).onErrorResume { e ->
+                                logger.error(
+                                    "Error processing XML entry inside batch: ${e.message}"
+                                )
+                                Mono.empty()
+                            }
+                        },
+                        parsingServiceConcurrency,
+                    )
+            }
+            .then(
+                Mono.defer {
+                    logger.info(
+                        "ZIP $filename processing completed. Updating status to DOWNLOADED."
+                    )
+                    val updatedZipDocument =
+                        accountingZipDocument.copy(status = AccountingZipStatus.DOWNLOADED)
+                    zipRepository.save(updatedZipDocument)
+                }
             )
-            .then()
             .thenReturn(Unit)
     }
 
-    private fun decryptSignedStream(p7mZipInputStream: InputStream): Flux<AccountingXmlDocument> {
+    private fun decryptSignedStream(
+        zipFilename: String,
+        p7mZipInputStream: InputStream,
+    ): Flux<AccountingXmlDocument> {
         return Flux.create { sink ->
                 try {
                     // P7M Unwrapping
                     BufferedInputStream(p7mZipInputStream).use { bufferedIn ->
-                        val digestProvider =
-                            JcaDigestCalculatorProviderBuilder().setProvider("BC").build()
-                        val cmsParser = CMSSignedDataParser(digestProvider, bufferedIn)
+                        val cmsData = CMSSignedData(bufferedIn)
 
                         val signedContent =
-                            cmsParser.signedContent
+                            cmsData.signedContent
                                 ?: throw IllegalArgumentException("No content found in P7M")
 
-                        signedContent.contentStream.use { rawCmsStream ->
-                            processZipEntries(rawCmsStream, sink)
+                        val contentStream: InputStream =
+                            when (val contentObject = signedContent.content) {
+                                is ByteArray -> ByteArrayInputStream(contentObject)
+                                is InputStream -> contentObject
+                                else ->
+                                    error(
+                                        "Unexpected content type: ${contentObject?.javaClass?.name}"
+                                    )
+                            }
+
+                        contentStream.use { rawCmsStream ->
+                            processZipEntries(zipFilename, rawCmsStream, sink)
                         }
-                        // Drain the parser (Required to prevent EOFException)
-                        cmsParser.signerInfos
                     }
                     sink.complete()
                 } catch (e: Exception) {
@@ -86,6 +121,7 @@ class ReactiveP7mZipService(
     }
 
     private fun processZipEntries(
+        zipFilename: String,
         decryptedStream: InputStream,
         sink: FluxSink<AccountingXmlDocument>,
     ) {
@@ -99,10 +135,10 @@ class ReactiveP7mZipService(
                             val contentString = String(bytes, Charsets.UTF_8)
                             val accountingXmlDocument =
                                 AccountingXmlDocument(
-                                    zipFilename = "",
+                                    zipFilename = zipFilename,
                                     filename = entry.name,
                                     xmlContent = contentString,
-                                    status = "", // TODO: set status
+                                    status = AccountingXmlStatus.TO_PARSE,
                                 )
                             sink.next(accountingXmlDocument)
                         } catch (e: Exception) {

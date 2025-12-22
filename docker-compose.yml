@@ -25,6 +25,29 @@ services:
     networks:
       - pagopa-bdi-ingestion-net
 
+  mongo-express:
+    container_name: pagopa-bdi-ingestion-mongo-express
+    image: mongo-express@sha256:1b23d7976f0210dbec74045c209e52fbb26d29b2e873d6c6fa3d3f0ae32c2a64
+    env_file: ./docker/config/mongo/mongo-express.env
+    ports:
+      - "8201:8081"
+    networks:
+      - pagopa-bdi-ingestion-net
+    depends_on:
+      - mongo
+
+  mongo:
+    container_name: pagopa-bdi-ingestion-mongo
+    image: mongo@sha256:7b225d4ae2df7cf98812f27f5d0d98054efaf9bfd4cc79c7e3e0bed1c1d3bf45
+    env_file: ./docker/config/mongo/mongodb.env
+    ports:
+      - "28017:27017"
+    networks:
+      - pagopa-bdi-ingestion-net
+    healthcheck:
+      test: echo "db.stats().ok" | mongo --quiet
+      interval: 10s
+
 networks:
   pagopa-bdi-ingestion-net:
     driver: bridge

@@ -1,10 +1,11 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.service
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import it.pagopa.accounting.reconciliation.bdi.ingestion.TestUtils
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.AccountingXmlDocument
 import it.pagopa.accounting.reconciliation.bdi.ingestion.documents.BdiAccountingData
+import it.pagopa.accounting.reconciliation.bdi.ingestion.repositories.AccountingXmlRepository
 import java.math.BigDecimal
-import java.time.Instant
 import kotlin.test.Test
 import org.assertj.core.api.Assertions.assertThat
 import org.mockito.kotlin.any
@@ -17,7 +18,8 @@ import reactor.test.StepVerifier
 
 class XmlParserServiceTest {
     private val ingestionService: IngestionService = mock()
-    private val xmlParserService = XmlParserService(ingestionService)
+    private val xmlRepository: AccountingXmlRepository = mock()
+    private val xmlParserService = XmlParserService(ingestionService, xmlRepository)
 
     @Test
     fun `should parse valid XML and extract all fields correctly`() {
@@ -39,17 +41,13 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument =
-            AccountingXmlDocument(
-                "test-id",
-                "test_zipname",
-                "test_filename",
-                Instant.now(),
-                xmlContent,
-                "status_test",
-            )
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = xmlContent)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         val captor = argumentCaptor<BdiAccountingData>()
 
@@ -85,17 +83,13 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument =
-            AccountingXmlDocument(
-                "test-id",
-                "test_zipname",
-                "test_filename",
-                Instant.now(),
-                xmlContent,
-                "status_test",
-            )
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = xmlContent)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         val captor = argumentCaptor<BdiAccountingData>()
 
@@ -131,17 +125,13 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument =
-            AccountingXmlDocument(
-                "test-id",
-                "test_zipname",
-                "test_filename",
-                Instant.now(),
-                xmlContent,
-                "status_test",
-            )
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = xmlContent)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         val captor = argumentCaptor<BdiAccountingData>()
 
@@ -173,17 +163,13 @@ class XmlParserServiceTest {
             """
                 .trimIndent()
 
-        val accountingXmlDocument =
-            AccountingXmlDocument(
-                "test-id",
-                "test_zipname",
-                "test_filename",
-                Instant.now(),
-                xmlContent,
-                "status_test",
-            )
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = xmlContent)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
+        given(xmlRepository.save(any())).willAnswer { invocation ->
+            val entityToSave = invocation.getArgument<AccountingXmlDocument>(0)
+            Mono.just(entityToSave)
+        }
 
         val captor = argumentCaptor<BdiAccountingData>()
 
@@ -209,19 +195,9 @@ class XmlParserServiceTest {
         // pre-requisites
         val brokenXml = "<OPI_REND_ANALITICO><movimento>No Closing Tag"
 
-        val accountingXmlDocument =
-            AccountingXmlDocument(
-                "test-id",
-                "test_zipname",
-                "test_filename",
-                Instant.now(),
-                brokenXml,
-                "status_test",
-            )
+        val accountingXmlDocument = TestUtils.accountingXmlDocument(xmlContent = brokenXml)
 
         given(ingestionService.ingestElement(any())).willReturn(Mono.just(Unit))
-
-        val captor = argumentCaptor<BdiAccountingData>()
 
         // test
         StepVerifier.create(xmlParserService.processXmlFile(accountingXmlDocument))

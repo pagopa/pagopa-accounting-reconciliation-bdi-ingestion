@@ -107,7 +107,7 @@ class DataMatchingScheduledJob(
                 Retry.backoff(retries, Duration.ofSeconds(minBackoffSeconds))
                     .onRetryExhaustedThrow { _, signal -> MatchingJobException(signal.failure()) }
             )
-            .doOnNext { it ->
+            .doOnNext {
                 logger.info("Matching job complete successfully.")
                 val table = it.primaryResults
                 if (table != null && table.hasNext()) {

@@ -2,6 +2,7 @@ package it.pagopa.accounting.reconciliation.bdi.ingestion.scheduledjob
 
 import com.microsoft.azure.kusto.data.Client
 import com.microsoft.azure.kusto.data.KustoOperationResult
+import com.microsoft.azure.kusto.data.KustoResultSetTable
 import it.pagopa.accounting.reconciliation.bdi.ingestion.exceptions.MatchingJobException
 import java.time.Duration
 import kotlin.test.Test
@@ -49,8 +50,14 @@ class DataMatchingScheduledJobTest {
     fun `should create the new table using the matching query`() {
 
         var responseObj: KustoOperationResult = mock()
+        var table: KustoResultSetTable = mock()
+        var rowAffected: Long = 100
 
         given(kustoClient.executeMgmtAsync(any(), any(), any())).willReturn(Mono.just(responseObj))
+        given(responseObj.primaryResults).willReturn(table)
+        given(table.hasNext()).willReturn(true)
+        given(table.next()).willReturn(true)
+        given(table.getLong(any<String>())).willReturn(rowAffected)
 
         StepVerifier.create(dataMatchingScheduledJob.matchingQuery())
             .expectSubscription()

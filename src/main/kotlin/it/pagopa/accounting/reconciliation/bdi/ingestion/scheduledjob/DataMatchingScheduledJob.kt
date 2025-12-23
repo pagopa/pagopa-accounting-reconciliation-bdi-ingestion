@@ -29,26 +29,23 @@ class DataMatchingScheduledJob(
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
+    val properties by lazy { ClientRequestProperties() }
 
-    @Scheduled(cron = "\${matching-job.execution.cron}")
-    fun matchingQuery(): Mono<Void> {
-        logger.info("Starting Matching scheduled Job")
-
-        /*
-           This KQL query filter the bdiTable and the fdrTable base on the timeshift set,
-           then produce a `leftouter` join of the two table:
-           - A new column is created using a regex for extract the END2END_ID from the CAUSALE,
-             named END2END_CAUSALE, and used as key with ID_FLUSSO in the join
-            In both the case a new column named DIFFERENZA_BDI_FDR_IMPORTO is added, containing the difference
-            between the IMPORTO (BDI data for the amount of the payment) and the SOMMA_VERSATA ( FDR data for the
-            amount of the payment registered in FLUSSO DI RENDICONTAZIONE).
-            This data is useful to understand if the two data match ( value == 0 ) or no ( value !== 0 ).
-            After that the two table produced with the join are unified and a `leftouter` join with the existing
-            matchingTable is done, for remove element already present, but add element with a new value of
-            DIFFERENZA_BDI_FDR_IMPORTO, a new column with INSERTED_DATE is added and the then append the result.
-        */
-        val kqlCommand =
-            """
+    /*
+       This KQL query filter the bdiTable and the fdrTable base on the timeshift set,
+       then produce a `leftouter` join of the two table:
+       - A new column is created using a regex for extract the END2END_ID from the CAUSALE,
+         named END2END_CAUSALE, and used as key with ID_FLUSSO in the join
+        In both the case a new column named DIFFERENZA_BDI_FDR_IMPORTO is added, containing the difference
+        between the IMPORTO (BDI data for the amount of the payment) and the SOMMA_VERSATA ( FDR data for the
+        amount of the payment registered in FLUSSO DI RENDICONTAZIONE).
+        This data is useful to understand if the two data match ( value == 0 ) or no ( value !== 0 ).
+        After that the two table produced with the join are unified and a `leftouter` join with the existing
+        matchingTable is done, for remove element already present, but add element with a new value of
+        DIFFERENZA_BDI_FDR_IMPORTO, a new column with INSERTED_DATE is added and the then append the result.
+    */
+    private val kqlCommand =
+        """
             .append $matchingTable <|
             let T1 = materialize( 
                 $bdiTable
@@ -75,11 +72,11 @@ class DataMatchingScheduledJob(
             | where ingestion_time()  > ago($matchingTableTimeshift);
         
             matchCausale_IdFlusso
-            | join kind=leftouter (ExistingData) on CAUSALE, ID_FLUSSO
+            | join kind=leftouter (ExistingData) on CAUSALE
             | where 
                 isempty(CAUSALE1)
                 or
-                (DIFFERENZA_BDI_FDR_IMPORTO != DIFFERENZA_BDI_FDR_IMPORTO1)
+                (isnotempty(DIFFERENZA_BDI_FDR_IMPORTO) and (DIFFERENZA_BDI_FDR_IMPORTO != DIFFERENZA_BDI_FDR_IMPORTO1))
             | extend INSERTED_DATE = now()
             | project  
                 END2END_ID, 
@@ -96,13 +93,16 @@ class DataMatchingScheduledJob(
                 IMPORTO_BDI = IMPORTO,
                 IMPORTO_FDR = SOMMA_VERSATA   
             """
-                .trimIndent()
+            .trimIndent()
 
-        val properties = ClientRequestProperties()
+    @Scheduled(cron = "\${matching-job.execution.cron}")
+    fun matchingQuery(): Mono<Void> {
+
         properties.setTimeoutInMilliSec(TimeUnit.MINUTES.toMillis(timeout))
 
         return kustoClient
             .executeMgmtAsync(database, kqlCommand, properties)
+            .doFirst { logger.info("Starting Matching scheduled Job") }
             .retryWhen(
                 Retry.backoff(retries, Duration.ofSeconds(minBackoffSeconds))
                     .onRetryExhaustedThrow { _, signal -> MatchingJobException(signal.failure()) }

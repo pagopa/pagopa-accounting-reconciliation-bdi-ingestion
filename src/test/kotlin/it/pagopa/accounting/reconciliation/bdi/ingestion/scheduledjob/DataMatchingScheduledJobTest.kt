@@ -23,7 +23,7 @@ class DataMatchingScheduledJobTest {
     private val bdiTimeshift: String = "7d"
     private val fdrTimeshift: String = "7d"
     private val bdiTable: String = "bdiTable"
-    private val fdrTable: String = "fdiTable"
+    private val fdrTable: String = "fdrTable"
     private val matchingTable: String = "matchingTable"
     private val matchingTableTimeshift: String = "25d"
     private val regexCausaleQuery: String = "regexCausaleQuery"

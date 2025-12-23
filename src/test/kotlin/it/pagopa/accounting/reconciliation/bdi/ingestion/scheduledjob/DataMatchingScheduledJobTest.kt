@@ -20,10 +20,11 @@ class DataMatchingScheduledJobTest {
     private val timeout: Long = 10
     private val database: String = "test"
     private val bdiTimeshift: String = "7d"
-    private val fdiTimeshift: String = "7d"
+    private val fdrTimeshift: String = "7d"
     private val bdiTable: String = "bdiTable"
-    private val fdiTable: String = "fdiTable"
+    private val fdrTable: String = "fdiTable"
     private val matchingTable: String = "matchingTable"
+    private val matchingTableTimeshift: String = "25d"
     private val regexCausaleQuery: String = "regexCausaleQuery"
     private val retries: Long = 2
     private val minBackoffSeconds: Long = 15
@@ -34,11 +35,12 @@ class DataMatchingScheduledJobTest {
             timeout,
             database,
             bdiTimeshift,
-            fdiTimeshift,
+            fdrTimeshift,
             bdiTable,
-            fdiTable,
+            fdrTable,
             matchingTable,
             regexCausaleQuery,
+            matchingTableTimeshift,
             retries,
             minBackoffSeconds,
         )

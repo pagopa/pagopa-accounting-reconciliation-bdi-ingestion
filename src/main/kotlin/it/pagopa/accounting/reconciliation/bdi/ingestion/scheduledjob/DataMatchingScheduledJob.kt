@@ -49,7 +49,7 @@ class DataMatchingScheduledJob(
         */
         val kqlCommand =
             """
-            .append async $matchingTable <|
+            .append $matchingTable <|
             let T1 = materialize( 
                 $bdiTable
                 | where ingestion_time()  > ago($bdiTimeshift)

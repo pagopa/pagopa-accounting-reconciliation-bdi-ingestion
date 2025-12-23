@@ -30,8 +30,6 @@ cp .env.local.example .env
 
 
 If you want to customize the application environment, reference this table:
-
-
 | Variable name                                         | Description                                                                                                                                                | type              | default |
 |-------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|---------|
 | ROOT_LOGGING_LEVEL                                    | Application root logger level                                                                                                                              | string            | INFO    |
@@ -48,6 +46,18 @@ If you want to customize the application environment, reference this table:
 | ACCOUNTING_DATA_INGESTION_JOB_UNZIP_CONCURRENCY       | Accounting data ingestion job unzip service parallelism                                                                                                    | integer           |         |
 | ACCOUNTING_DATA_INGESTION_JOB_UNZIP_FILES_BUFFER_SIZE | Accounting data ingestion job saved files buffer size                                                                                                      | integer           |         |
 | ACCOUNTING_DATA_INGESTION_JOB_PARSING_CONCURRENCY     | Accounting data ingestion job parsing service parallelism                                                                                                  | integer           |         |
+| MATCHING_JOB_EXECUTION_CRON                           | Scheduled matching service cron expression                                                                                                                 | string            |         |
+| MATCHING_JOB_EXECUTION_RETRIES                        | Scheduled matching service number of retry                                                                                                                 | integer           |         |
+| MATCHING_JOB_EXECUTION_MIN_BACKOFF_SECONDS            | Scheduled matching service minimum backoff time                                                                                                            | integer           |         |
+| MATCHING_JOB_TIMEOUT                                  | Scheduled matching service query timeout                                                                                                                   | integer           |         |
+| MATCHING_JOB_BDI_TIMESHIFT                            | Scheduled matching service timeshift for the BDI query                                                                                                     | string            |         |
+| MATCHING_JOB_FDR_TIMESHIFT                            | Scheduled matching service timeshift for FDR query                                                                                                         | string            |         |      
+| MATCHING_JOB_QUERY_CAUSALE_REGEX                      | Scheduled matching service regex used for extract the END2END_ID from CAUSALE                                                                              | string            |         |
+| MATCHING_JOB_DATABASE                                 | Scheduled matching service database used                                                                                                                   | string            |         |
+| MATCHING_JOB_DATABASE_TABLE_BDI                       | Scheduled matching service BDI table name                                                                                                                  | string            |         |
+| MATCHING_JOB_DATABASE_TABLE_FDR                       | Scheduled matching service FDR table name                                                                                                                  | string            |         |
+| MATCHING_JOB_DATABASE_TABLE_MATCHING                  | Scheduled matching service MATCHING table name                                                                                                             | string            |         |
+| MATCHING_JOB_MATHING_TIMESHIFT                        | Scheduled matching service timeshift for the MATCHING table query                                                                                          | string            |         |
 | BDI_CERTIFICATE_PATH                                  | Path to the BDI pem certificate                                                                                                                            | string            |         |
 | AZURE_DATA_EXPLORER_DOMAIN                            | Data Explorer domain                                                                                                                                       | string            |         |
 | AZURE_DATA_EXPLORER_DATABASE                          | Data Explorer database name                                                                                                                                | string            |         |
@@ -70,6 +80,7 @@ If you want to customize the application environment, reference this table:
 
 \* For Mongo connection string options
 see [docs](https://www.mongodb.com/docs/drivers/java/sync/v4.3/fundamentals/connection/connection-options/#connection-options)
+
 
 ### Run docker container
 

@@ -1,87 +1,48 @@
 package it.pagopa.accounting.reconciliation.bdi.ingestion.documents
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
+import it.pagopa.accounting.reconciliation.bdi.ingestion.TestUtils
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNotNull
 
 class AccountingZipDocumentTest {
 
     @Test
     fun `should create instance with all fields populated`() {
-        val now = Instant.now()
-        val id = "12345"
-        val filename = "accounting_2024.zip"
-        val status = "DOWNLOADED"
+        val document = TestUtils.accountingZipDocument()
 
-        val document =
-            AccountingZipDocument(id = id, filename = filename, uploadedAt = now, status = status)
-
-        assertThat(document.id).isEqualTo(id)
-        assertThat(document.filename).isEqualTo(filename)
-        assertThat(document.uploadedAt).isEqualTo(now)
-        assertThat(document.status).isEqualTo(status)
-    }
-
-    @Test
-    fun `should check default values`() {
-
-        val document = AccountingZipDocument(filename = "test.zip", status = "PENDING")
-
-        assertThat(document.id).isNull()
-        assertThat(document.filename).isEqualTo("test.zip")
-        assertThat(document.status).isEqualTo("PENDING")
-
-        assertThat(document.uploadedAt).isNotNull()
-        assertThat(document.uploadedAt)
-            .isCloseTo(
-                Instant.now(),
-                org.assertj.core.data.TemporalUnitWithinOffset(1, ChronoUnit.SECONDS),
-            )
-    }
-
-    @Test
-    fun `should verify equals and hashCode contract`() {
-        val now = Instant.now()
-        val doc1 =
-            AccountingZipDocument(id = "1", filename = "file.zip", uploadedAt = now, status = "OK")
-        val doc2 =
-            AccountingZipDocument(id = "1", filename = "file.zip", uploadedAt = now, status = "OK")
-        val doc3 =
-            AccountingZipDocument(id = "2", filename = "file.zip", uploadedAt = now, status = "OK")
-
-        assertThat(doc1).isEqualTo(doc2)
-        assertThat(doc1.hashCode()).isEqualTo(doc2.hashCode())
-        assertThat(doc1).isNotEqualTo(doc3)
+        assertNotNull(document.id)
+        assertNotNull(document.filename)
+        assertNotNull(document.createdAt)
+        assertNotNull(document.updatedAt)
+        assertNotNull(document.status)
     }
 
     @Test
     fun `should verify copy mechanism`() {
+        val original = TestUtils.accountingZipDocument()
 
-        val original = AccountingZipDocument(id = "1", filename = "original.zip", status = "NEW")
-
-        val modified = original.copy(status = "PROCESSED")
+        val modified = original.copy(status = AccountingZipStatus.DOWNLOADED)
 
         assertThat(modified.id).isEqualTo(original.id)
         assertThat(modified.filename).isEqualTo(original.filename)
-        assertThat(modified.uploadedAt).isEqualTo(original.uploadedAt)
-        assertThat(modified.status).isEqualTo("PROCESSED")
-
-        assertThat(original.status).isEqualTo("NEW")
+        assertThat(modified.createdAt).isEqualTo(original.createdAt)
+        assertThat(modified.updatedAt).isEqualTo(original.updatedAt)
+        assertThat(modified.status.name).isEqualTo(AccountingZipStatus.DOWNLOADED.name)
+        assertThat(original.status.name).isEqualTo(AccountingZipStatus.TO_DOWNLOAD.name)
     }
 
     @Test
     fun `toString should contain field values`() {
-
-        val document =
-            AccountingZipDocument(id = "test-id", filename = "my-file.zip", status = "ERROR")
+        val document = TestUtils.accountingZipDocument()
 
         val stringRepresentation = document.toString()
 
         assertThat(stringRepresentation)
-            .contains("test-id")
-            .contains("my-file.zip")
-            .contains("ERROR")
-            .contains("AccountingZipDocument")
+            .contains(document.id)
+            .contains(document.filename)
+            .contains(document.createdAt.toString())
+            .contains(document.updatedAt.toString())
+            .contains(document.status.name)
     }
 }

@@ -3,21 +3,28 @@
     "files" :
     [
       {
-        "fileName" : "test.zip.p7m",
+        "fileName" : "MOCK-OPI-REND-ANALITICO-BE-OK.zip.p7m",
         "isDirectory" : false,
         "isRegularFile" : true,
         "size" : 6131,
         "lastModifiedTime" : 1762456781293
       },
       {
-        "fileName" : "test_2.zip.p7m",
+        "fileName" : "MOCK-OPI-REND-ANALITICO-BE-OK-2.zip.p7m",
         "isDirectory" : false,
         "isRegularFile" : true,
         "size" : 6131,
         "lastModifiedTime" : 1762456781293
       },
       {
-        "fileName" : "test_empty.zip.p7m",
+        "fileName" : "MOCK-OPI-REND-ANALITICO-BE-EMPTY.zip.p7m",
+        "isDirectory" : false,
+        "isRegularFile" : true,
+        "size" : 1445,
+        "lastModifiedTime" : 1762456781293
+      },
+      {
+        "fileName" : "MOCK-OPI-REND-ANALITICO-BE-DETACHED-SIGNATURE.zip.p7m",
         "isDirectory" : false,
         "isRegularFile" : true,
         "size" : 1445,

@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 
 @Service
 class IngestionService(
@@ -20,6 +21,13 @@ class IngestionService(
 ) {
     private val logger = LoggerFactory.getLogger(javaClass)
 
+    private val ingestionProperties: IngestionProperties by lazy {
+        IngestionProperties(database, table).apply {
+            reportLevel = IngestionProperties.IngestionReportLevel.FAILURES_AND_SUCCESSES
+            dataFormat = IngestionProperties.DataFormat.JSON
+        }
+    }
+
     // Create a copy of the objectMapper, but it can handle the Instant kotlin class
     private val ingestionMapper: ObjectMapper by lazy {
         objectMapper.copy().registerModule(JavaTimeModule())
@@ -27,18 +35,12 @@ class IngestionService(
 
     fun <T : Any> ingestElement(element: T): Mono<Unit> {
         return Mono.fromCallable {
-                val jsonPayload = ingestionMapper.writeValueAsString(element)
-                val inputStream = ByteArrayInputStream(jsonPayload.toByteArray())
-
-                val ingestionProperties = IngestionProperties(database, table)
-                ingestionProperties.reportLevel =
-                    IngestionProperties.IngestionReportLevel.FAILURES_AND_SUCCESSES
-                ingestionProperties.dataFormat = IngestionProperties.DataFormat.JSON
-
-                val sourceInfo = StreamSourceInfo(inputStream)
-                ingestClient.ingestFromStream(sourceInfo, ingestionProperties)
+                val jsonBytes = ingestionMapper.writeValueAsBytes(element)
+                StreamSourceInfo(ByteArrayInputStream(jsonBytes))
             }
-            .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.boundedElastic())
+            .flatMap { ingestClient.ingestFromStreamAsync(it, ingestionProperties) }
+            .doOnSuccess { logger.debug("Element successfully sent to ingestion queue") }
             .map {}
     }
 }

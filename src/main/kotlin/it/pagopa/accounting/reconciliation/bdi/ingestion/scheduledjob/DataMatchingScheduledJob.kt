@@ -39,13 +39,13 @@ class DataMatchingScheduledJob(
            then produce a `leftouter` join of the two table:
            - A new column is created using a regex for extract the END2END_ID from the CAUSALE,
              named END2END_CAUSALE, and used as key with ID_FLUSSO in the join
-            In both the case a new column named DIFFERENZA_BDI_FDI_IMPORTO is added, containing the difference
+            In both the case a new column named DIFFERENZA_BDI_FDR_IMPORTO is added, containing the difference
             between the IMPORTO (BDI data for the amount of the payment) and the SOMMA_VERSATA ( FDR data for the
             amount of the payment registered in FLUSSO DI RENDICONTAZIONE).
             This data is useful to understand if the two data match ( value == 0 ) or no ( value !== 0 ).
             After that the two table produced with the join are unified and a `leftouter` join with the existing
             matchingTable is done, for remove element already present, but add element with a new value of
-            DIFFERENZA_BDI_FDI_IMPORTO, a new column with INSERTED_DATE is added and the then append the result.
+            DIFFERENZA_BDI_FDR_IMPORTO, a new column with INSERTED_DATE is added and the then append the result.
         */
         val kqlCommand =
             """
@@ -69,7 +69,7 @@ class DataMatchingScheduledJob(
                 | extend END2END_CAUSALE = extract("$regexCausaleQuery", 1, CAUSALE)
                 //| where isnotempty(END2END_CAUSALE)
                 | join kind=leftouter hint.strategy=shuffle (T2) on ${'$'}left.END2END_CAUSALE == ${'$'}right.ID_FLUSSO
-                | extend DIFFERENZA_BDI_FDI_IMPORTO = IMPORTO - SOMMA_VERSATA;
+                | extend DIFFERENZA_BDI_FDR_IMPORTO = IMPORTO - SOMMA_VERSATA;
         
             let ExistingData = $matchingTable
             | where ingestion_time()  > ago($matchingTableTimeshift);
@@ -79,7 +79,7 @@ class DataMatchingScheduledJob(
             | where 
                 isempty(CAUSALE1)
                 or
-                (DIFFERENZA_BDI_FDI_IMPORTO != DIFFERENZA_BDI_FDI_IMPORTO1)
+                (DIFFERENZA_BDI_FDR_IMPORTO != DIFFERENZA_BDI_FDR_IMPORTO1)
             | extend INSERTED_DATE = now()
             | project  
                 END2END_ID, 
@@ -90,11 +90,11 @@ class DataMatchingScheduledJob(
                 PSP, 
                 IMPORTO, 
                 SOMMA_VERSATA, 
-                DIFFERENZA_BDI_FDI_IMPORTO, 
+                DIFFERENZA_BDI_FDR_IMPORTO, 
                 INSERTED_DATE
             | project-rename 
                 IMPORTO_BDI = IMPORTO,
-                IMPORTO_FDI = SOMMA_VERSATA   
+                IMPORTO_FDR = SOMMA_VERSATA   
             """
                 .trimIndent()
 

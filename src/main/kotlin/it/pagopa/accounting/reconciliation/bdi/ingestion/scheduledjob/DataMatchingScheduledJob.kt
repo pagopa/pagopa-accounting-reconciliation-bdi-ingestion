@@ -98,8 +98,6 @@ class DataMatchingScheduledJob(
             """
                 .trimIndent()
 
-        logger.info(kqlCommand)
-
         val properties = ClientRequestProperties()
         properties.setTimeoutInMilliSec(TimeUnit.MINUTES.toMillis(timeout))
 

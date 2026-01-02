@@ -29,7 +29,9 @@ class DataMatchingScheduledJob(
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
-    val properties by lazy { ClientRequestProperties() }
+    val properties: ClientRequestProperties by lazy {
+        ClientRequestProperties().apply { timeoutInMilliSec = TimeUnit.MINUTES.toMillis(timeout) }
+    }
 
     /*
        This KQL query filter the bdiTable and the fdrTable base on the timeshift set,

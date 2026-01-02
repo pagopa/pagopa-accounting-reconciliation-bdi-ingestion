@@ -100,7 +100,6 @@ class DataMatchingScheduledJob(
     @Scheduled(cron = "\${matching-job.execution.cron}")
     fun matchingQuery(): Mono<Void> {
 
-        properties.setTimeoutInMilliSec(TimeUnit.MINUTES.toMillis(timeout))
 
         return kustoClient
             .executeMgmtAsync(database, kqlCommand, properties)

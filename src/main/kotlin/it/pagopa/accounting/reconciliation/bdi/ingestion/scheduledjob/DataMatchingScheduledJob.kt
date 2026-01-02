@@ -100,7 +100,6 @@ class DataMatchingScheduledJob(
     @Scheduled(cron = "\${matching-job.execution.cron}")
     fun matchingQuery(): Mono<Void> {
 
-
         return kustoClient
             .executeMgmtAsync(database, kqlCommand, properties)
             .doFirst { logger.info("Starting Matching scheduled Job") }

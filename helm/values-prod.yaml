@@ -4,7 +4,7 @@ microservice-chart:
   fullnameOverride: "pagopa-accounting-reconciliation-bdi-ingestion"
   image:
     repository: pagopapcommonacr.azurecr.io/pagopaaccountingreconciliationbdiingestion
-    tag: "1.5.0"
+    tag: "1.6.0"
     pullPolicy: Always
   livenessProbe:
     httpGet:
@@ -86,7 +86,7 @@ microservice-chart:
     BDI_SERVER_URI: "https://scambioflussi.bancaditalia.it/a2a/download/tesoreria"
     BDI_SERVER_READ_TIMEOUT_MILLIS: "10000"
     BDI_SERVER_CONNECTION_TIMEOUT_MILLIS: "10000"
-    ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON: "-"
+    ACCOUNTING_DATA_INGESTION_JOB_EXECUTION_CRON: "0 0 */8 * * *" # Every 8 hours (at 00:00, 08:00, 16:00)
     ACCOUNTING_DATA_INGESTION_JOB_RETRIES: "3"
     ACCOUNTING_DATA_INGESTION_JOB_MIN_BACKOFF_SECONDS: "5"
     ACCOUNTING_DATA_INGESTION_JOB_UNZIP_CONCURRENCY: "2"

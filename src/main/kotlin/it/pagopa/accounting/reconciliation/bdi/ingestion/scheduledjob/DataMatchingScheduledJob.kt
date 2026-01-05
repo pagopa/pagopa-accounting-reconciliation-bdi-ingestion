@@ -71,7 +71,8 @@ class DataMatchingScheduledJob(
                 | extend DIFFERENZA_BDI_FDR_IMPORTO = IMPORTO - SOMMA_VERSATA;
         
             let ExistingData = $matchingTable
-            | where ingestion_time()  > ago($matchingTableTimeshift);
+            | where ingestion_time()  > ago($matchingTableTimeshift)
+            | summarize arg_max(INSERTED_DATE, *) by CAUSALE;
         
             matchCausale_IdFlusso
             | join kind=leftouter (ExistingData) on CAUSALE

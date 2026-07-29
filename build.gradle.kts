@@ -34,7 +34,7 @@ object Dependencies {
   const val openTelemetryVersion = "1.37.0"
   const val mockitoVersion = "6.1.0"
   const val JsonNullableJacksonVersion = "0.2.8"
-  const val bouncyCastleVersion = "1.82"
+  const val bouncyCastleVersion = "1.84"
   const val kustoIngest = "7.0.4"
 }
 

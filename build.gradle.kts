@@ -31,7 +31,7 @@ repositories { mavenCentral() }
 
 object Dependencies {
   const val ecsLoggingVersion = "1.5.0"
-  const val openTelemetryVersion = "1.37.0"
+  const val openTelemetryVersion = "1.62.0"
   const val mockitoVersion = "6.1.0"
   const val JsonNullableJacksonVersion = "0.2.8"
   const val bouncyCastleVersion = "1.82"

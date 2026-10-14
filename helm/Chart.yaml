@@ -7,4 +7,4 @@ description: Microservice designed to ingest BDI data for the accounting reconci
 dependencies:
   - name: microservice-chart
     repository: "https://pagopa.github.io/aks-microservice-chart-blueprint"
-    version: 8.0.0
+    version: 8.8.1

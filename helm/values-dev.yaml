@@ -69,6 +69,7 @@ microservice-chart:
   secretProviderClass:
     create: true
   envConfig:
+    JAVA_OPTS: "-XX:-UseBASE64Intrinsics"
     ROOT_LOGGING_LEVEL: "info"
     APP_LOGGING_LEVEL: "info"
     WEB_LOGGING_LEVEL: "info"
